@@ -3,34 +3,26 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Gerenciador Pro — ChamadorApp</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <title>Central de Gerenciamento • Smart Mídia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
     <style>
          :root {
-            --bg: #f0f2f5;
-            --surface: #ffffff;
-            --primary: #1058a2;
-            --primary-dark: #0d4682;
-            --danger: #ff4d4f;
-            --success: #52c41a;
-            --radius: 16px;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
-        
-        body {
-            margin: 0;
-            background: var(--bg);
-            color: #1f2937;
-            display: none;
-            flex-direction: column;
-            min-height: 100vh;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --primary: #0f172a;
+            --brand: #0284c7;
+            --brand-light: #e0f2fe;
+            --brand-dark: #0369a1;
+            --success: #10b981;
+            --error: #ef4444;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --radius-lg: 24px;
+            --radius-md: 12px;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
         
         * {
@@ -38,929 +30,729 @@
             transition: all 0.2s ease;
         }
         
-        .top-bar {
-            background: #fff;
-            padding: 10px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow);
-            border-bottom: 1px solid #e5e7eb;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-        
-        .brand-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .logo-preview {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            object-fit: contain;
-            background: #f9fafb;
-            border: 1px solid #eee;
-        }
-        
-        .account-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #f3f4f6;
-            padding: 6px 14px;
-            border-radius: 100px;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .account-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-        }
-        
-        .logout-btn {
-            background: none;
-            border: none;
-            color: var(--danger);
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 0 5px;
-        }
-        
-        .main-container {
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 25px;
-            padding: 25px 40px;
-            flex: 1;
-            max-width: 1600px;
-            margin: 0 auto;
-            width: 100%;
-        }
-        
-        @media (max-width: 1100px) {
-            .main-container {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .glass-panel {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 24px;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            height: fit-content;
-        }
-        
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        h2 {
+        body {
             margin: 0;
-            font-size: 1.25rem;
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(at 0% 0%, rgba(2, 132, 199, 0.05) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(2, 132, 199, 0.05) 0px, transparent 50%);
+            color: var(--primary);
             display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #111827;
+            justify-content: center;
+            padding: 20px;
         }
         
-        .input-group {
-            margin-bottom: 15px;
-        }
-        
-        .input-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: #4b5563;
-        }
-        
-        input[type="text"],
-        input[type="search"] {
+        .shell {
             width: 100%;
-            padding: 12px 16px;
-            border-radius: 10px;
-            border: 1px solid #d1d5db;
-            background: #f9fafb;
-            outline: none;
+            max-width: 1200px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
         
-        input:focus {
-            border-color: #1058a2;
-            box-shadow: 0 0 0 3px rgba(16, 88, 162, 0.1);
+        header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 20px;
         }
         
-        .btn {
-            padding: 10px 18px;
-            border-radius: 10px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
+        .brand-section {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        
+        .logo-box {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: #fff;
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            font-size: 14px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
         }
         
-        .btn-primary {
-            background: #1058a2;
-            color: white;
+        .logo-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: none;
         }
         
-        .btn-ghost {
-            background: #f3f4f6;
-            color: #374151;
+        .brand-titles h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.02em;
         }
         
-        .btn-outline {
-            background: transparent;
-            border: 1px solid #d1d5db;
-            color: #374151;
+        .brand-titles p {
+            margin: 2px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
         }
         
-        .btn-purple {
-            background: #6366f1;
-            color: white;
-        }
-        
-        .btn-orange {
-            background: #f97316;
-            color: white;
-        }
-        
-        .btn-danger-outline {
-            background: transparent;
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            margin-top: 10px;
-            width: 100%;
-        }
-        
-        .media-grid {
-            display: grid;
+        .actions-group {
+            display: flex;
+            align-items: center;
             gap: 12px;
         }
         
-        .media-card {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px;
+        .user-card {
             background: #fff;
-            border-radius: 12px;
-            border: 1px solid #edf2f7;
-            cursor: grab;
-        }
-        
-        .thumb-box {
-            width: 90px;
-            height: 60px;
-            border-radius: 8px;
-            background: #000;
-            overflow: hidden;
-            flex-shrink: 0;
-            position: relative;
-            border: 1px solid #ddd;
-        }
-        
-        .thumb-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .thumb-box iframe {
-            width: 400px;
-            height: 300px;
-            border: none;
-            transform: scale(0.23);
-            transform-origin: 0 0;
-            pointer-events: none;
-        }
-        
-        .switch-group {
+            padding: 6px 6px 6px 16px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            background: #f9fafb;
-            padding: 10px 15px;
-            border-radius: 10px;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 15px;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
         }
         
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 20px;
+        .user-data {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
         }
         
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
+        .user-data .terminal-name {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--brand-dark);
         }
         
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            inset: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 20px;
-        }
-        
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 14px;
-            width: 14px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        
-        input:checked+.slider {
-            background-color: var(--success);
-        }
-        
-        input:checked+.slider:before {
-            transform: translateX(20px);
-        }
-        
-        input[type="color"] {
-            height: 40px;
-            width: 100%;
-            cursor: pointer;
-            border: 1px solid #d1d5db;
-            padding: 2px;
-            border-radius: 8px;
-            background: white;
+        .user-data .user-email {
+            font-size: 11px;
+            color: var(--muted);
         }
         
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 100;
-            backdrop-filter: blur(4px);
-        }
-        
-        .modal-overlay.show {
-            display: flex;
+            z-index: 1000;
         }
         
         .modal-content {
             background: white;
-            width: 95%;
-            max-width: 500px;
-            padding: 30px;
-            border-radius: 20px;
-            max-height: 90vh;
-            overflow-y: auto;
+            padding: 24px;
+            border-radius: var(--radius-md);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: var(--shadow-md);
         }
         
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #1f2937;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 10px;
-            display: none;
-            z-index: 200;
-            box-shadow: var(--shadow);
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
         
-        .lib-card {
-            padding: 10px;
-            background: #fff;
-            border-radius: 12px;
-            text-align: center;
+        .info-row {
+            margin-bottom: 16px;
+        }
+        
+        .info-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .info-value {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
             cursor: pointer;
-            border: 2px solid transparent;
-            transition: 0.3s;
+            border: 1px solid var(--border);
         }
         
-        .lib-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-3px);
+        .info-value:hover {
+            border-color: var(--brand);
         }
         
-        .lib-thumb {
-            width: 100%;
-            height: 100px;
-            background: #eee;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            overflow: hidden;
+        .status-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .status-card {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #cbd5e1;
             position: relative;
         }
         
-        .lib-thumb iframe {
-            width: 1000px;
-            height: 800px;
-            border: none;
-            transform: scale(0.12);
-            transform-origin: 0 0;
-            pointer-events: none;
+        .dot.active {
+            background: var(--success);
         }
         
-        .menu-opt-btn {
-            width: 100%;
-            padding: 20px;
-            margin-bottom: 10px;
-            text-align: left;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            background: #f9fafb;
-            cursor: pointer;
+        .dot.error {
+            background: var(--error);
+        }
+        
+        .dot.pulse::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: inherit;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+        
+        .status-label {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+        
+        .status-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .status-sub {
+            font-size: 10px;
+            color: var(--muted);
+            font-weight: 400;
+            display: block;
+            margin-top: 2px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: #fff;
+            border-radius: var(--radius-md);
+            padding: 24px;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: inherit;
             display: flex;
-            align-items: center;
-            gap: 15px;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
         }
         
-        .menu-opt-btn:hover {
-            background: #f3f4f6;
-            border-color: var(--primary);
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--brand);
         }
         
-        .menu-opt-btn i {
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--bg);
+            display: grid;
+            place-items: center;
             font-size: 24px;
+        }
+        
+        .card-title {
+            font-weight: 700;
+            font-size: 17px;
+            margin-bottom: 4px;
+        }
+        
+        .card-desc {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: var(--brand);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--brand-dark);
+        }
+        
+        .btn-secondary {
+            background: #fff;
+            color: var(--muted);
+            border-color: var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg);
+            color: var(--primary);
+        }
+        
+        .btn-logout {
+            background: #fff;
+            color: var(--error);
+            border-color: #fee2e2;
+        }
+        
+        .btn-logout:hover {
+            background: #fef2f2;
+        }
+        
+        .btn-back {
+            background: transparent;
+            color: var(--muted);
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+        }
+        
+        .btn-back:hover {
+            color: var(--brand);
+            background: var(--brand-light);
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .user-card {
+                width: 100%;
+                justify-content: space-between;
+            }
         }
     </style>
 </head>
 
 <body>
+    <div id="modalInfo" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 style="margin:0; font-size:16px;">Detalhes da Conta</h3>
+                <button class="btn-back" onclick="toggleModal()" style="padding:4px">✕</button>
+            </div>
 
-    <header class="top-bar">
-        <div class="brand-area">
-            <button class="btn btn-outline" onclick="window.location.href='../central.html'">← Voltar</button>
-            <img id="nav-logo" src="" class="logo-preview" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4406/4406167.png'">
-            <h1 style="margin:0; font-size:1.1rem; color:#111827;">Painel de Controle</h1>
-        </div>
-        <div class="account-info">
-            <span class="account-name" id="userEmail">Usuário</span>
-            <button class="logout-btn" onclick="logout()">SAIR</button>
-        </div>
-    </header>
-
-    <main class="main-container">
-        <section class="glass-panel">
-            <div class="panel-header">
-                <h2>📂 Playlist de Mídias</h2>
-                <div style="display:flex; gap:10px; flex-wrap: wrap;">
-                    <input id="searchInput" type="search" placeholder="Procurar..." oninput="listarMidias()" style="max-width:150px;">
-                    <button class="btn btn-orange" onclick="showMenuModal(true)">🏷️ Menu Digital</button>
-                    <button class="btn btn-purple" onclick="showLibrary(true)">🏛️ Biblioteca</button>
-                    <button class="btn btn-primary" onclick="showModal(true)">+ Manual</button>
+            <div class="info-row">
+                <div class="info-label">User ID (UID)</div>
+                <div class="info-value" onclick="copyValue('uidVal')">
+                    <span id="uidVal">...</span> 📋
                 </div>
             </div>
-            <div id="list" class="media-grid"></div>
-            <div id="noMedia" style="text-align:center; padding:40px; color:#9ca3af; display:none;">A playlist está vazia.</div>
-        </section>
 
-        <aside style="display:flex; flex-direction:column; gap:25px;">
-            <section class="glass-panel" style="border-top: 4px solid #1058a2;">
-                <h2>🎨 Identidade & Rodapé</h2>
-                <div class="input-group">
-                    <label>URL do Logotipo</label>
-                    <input id="cfgLogo" type="text" placeholder="URL da imagem..." onblur="updatePreviewLogo()">
+            <div class="info-row">
+                <div class="info-label">Device ID (DID)</div>
+                <div class="info-value" onclick="copyValue('didVal')">
+                    <span id="didVal">...</span> 📋
                 </div>
+            </div>
 
-                <div class="switch-group">
-                    <label style="font-size: 13px; font-weight: 600; color: #4b5563;">Ativar Rodapé</label>
-                    <label class="switch">
-            <input type="checkbox" id="cfgShowFooter" checked>
-            <span class="slider"></span>
-          </label>
+            <p style="font-size:11px; color:var(--muted); margin-top:20px;">Clique nos códigos para copiar.</p>
+        </div>
+    </div>
+
+    <div class="shell">
+        <header>
+            <div class="brand-section">
+                <button class="btn-back" onclick="window.location.href='../midiaindoor/terminais.html'">← Voltar</button>
+                <div class="logo-box" id="logoContainer">
+                    <img id="logoImg" src="" alt="Logo">
+                    <span id="logoPlaceholder" style="font-size: 20px;">🏢</span>
                 </div>
-
-                <div class="switch-group">
-                    <label style="font-size: 13px; font-weight: 600; color: #4b5563;">Exibir Logo no Rodapé</label>
-                    <label class="switch">
-            <input type="checkbox" id="cfgShowLogoFooter" checked>
-            <span class="slider"></span>
-          </label>
+                <div class="brand-titles">
+                    <h1>Central de Gerenciamento</h1>
+                    <p>Smart Mídia • Monitoramento Ativo</p>
                 </div>
+            </div>
 
-                <div class="color-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="input-group">
-                        <label>Fundo Rodapé</label>
-                        <input type="color" id="cfgColorFoot">
+            <div class="actions-group">
+                <div class="user-card">
+                    <div class="user-data">
+                        <span class="terminal-name" id="empresaLabel">Carregando...</span>
+                        <span class="user-email" id="userLabel">—</span>
                     </div>
-                    <div class="input-group">
-                        <label>Texto Rodapé</label>
-                        <input type="color" id="cfgColorFootText">
+                    <button class="btn btn-secondary" style="width: 36px; height: 36px; padding:0; border-radius:50%" onclick="toggleModal()" title="Informações da Conta">⚙️</button>
+                    <button id="btnLogout" class="btn btn-logout">Sair</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="status-row">
+            <div class="status-card">
+                <div id="iconConexao" class="dot pulse"></div>
+                <div>
+                    <div class="status-label">Sistema</div>
+                    <div class="status-value" id="statusConexao">Verificando...</div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <div id="iconPainel" class="dot"></div>
+                <div>
+                    <div class="status-label">Status Terminal</div>
+                    <div class="status-value" id="textPainel">Aguardando...</div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <div class="icon-box" style="width: 32px; height:32px; font-size: 16px;">🕒</div>
+                <div>
+                    <div class="status-label">Último Sinal</div>
+                    <div class="status-value" id="lastSync">--/--/-- --:--</div>
+                    <span id="inativoTime" class="status-sub">Inativo há: --</span>
+                </div>
+            </div>
+        </div>
+
+        <main>
+            <div class="grid">
+                <div class="card" data-href="Exibidor/painelexibidor.html">
+                    <div style="display:flex; gap:16px">
+                        <div class="icon-box">🖥️</div>
+                        <div>
+                            <div class="card-title">Painel de Exibição</div>
+                            <div class="card-desc">Interface de saída em tempo real para os terminais ativos.</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:auto">
+                        <button class="btn btn-primary btn-abrir" style="flex:1">Abrir</button>
+                        <a class="btn btn-secondary btn-nova-guia" href="#" target="_blank">↗</a>
                     </div>
                 </div>
-                <button class="btn btn-primary" id="btnSalvarConfig" onclick="salvarConfiguracoes()" style="width:100%;">Aplicar Mudanças</button>
-                <button class="btn btn-danger-outline" onclick="restaurarCoresPadrao()" style="width:100%; border:none; font-size:12px;">Restaurar Padrões</button>
-            </section>
 
-            <section class="glass-panel">
-                <h2>📝 Frases do Rodapé</h2>
-                <div style="display:flex; gap:8px; margin-bottom:15px;">
-                    <input id="novaFrase" type="text" placeholder="Nova frase..." maxlength="120">
-                    <button class="btn btn-primary" onclick="adicionarFrase()">Add</button>
+                <div class="card" data-href="Pagina de Upload/painelupload.html">
+                    <div style="display:flex; gap:16px">
+                        <div class="icon-box">🖼️</div>
+                        <div>
+                            <div class="card-title">Gerenciar Mídias</div>
+                            <div class="card-desc">Upload de anúncios e organização de playlists.</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:auto">
+                        <button class="btn btn-primary btn-abrir" style="flex:1">Gerenciar</button>
+                        <a class="btn btn-secondary btn-nova-guia" href="#" target="_blank">↗</a>
+                    </div>
                 </div>
-                <div id="fraseList" style="max-height: 200px; overflow-y: auto; display:flex; flex-direction:column; gap:8px;"></div>
-            </section>
-        </aside>
-    </main>
 
-    <div id="backdrop" class="modal-overlay">
-        <div class="modal-content">
-            <h2 style="margin-top:0">➕ Adicionar Mídia</h2>
-            <div class="input-group">
-                <label>Nome</label>
-                <input id="nomeMidia" type="text" placeholder="Ex: Vídeo Institucional">
+                <div class="card" data-href="Relatório/relatorioexibicao.html">
+                    <div style="display:flex; gap:16px">
+                        <div class="icon-box">📊</div>
+                        <div>
+                            <div class="card-title">Relatórios</div>
+                            <div class="card-desc">Métricas de performance e prova de veiculação.</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:auto">
+                        <button class="btn btn-primary btn-abrir" style="flex:1">Ver</button>
+                        <a class="btn btn-secondary btn-nova-guia" href="#" target="_blank">↗</a>
+                    </div>
+                </div>
+
+                <div class="card" data-href="Relatório/terminaislog.html">
+                    <div style="display:flex; gap:16px">
+                        <div class="icon-box">🛡️</div>
+                        <div>
+                            <div class="card-title">Logs Técnicos</div>
+                            <div class="card-desc">Diagnóstico avançado e histórico de conectividade.</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:auto">
+                        <button class="btn btn-primary btn-abrir" style="flex:1">Analisar</button>
+                        <a class="btn btn-secondary btn-nova-guia" href="#" target="_blank">↗</a>
+                    </div>
+                </div>
             </div>
-            <div class="input-group">
-                <label>URL</label>
-                <input id="linkMidia" type="text" placeholder="Link da mídia..." oninput="detectaTipoInstantaneo()">
-                <div id="detectTypeBox" style="margin-top:5px;"></div>
-            </div>
-            <div style="display:flex; justify-content:flex-end; gap:10px;">
-                <button class="btn btn-ghost" onclick="showModal(false)">Cancelar</button>
-                <button class="btn btn-primary" onclick="adicionarMidia()">Salvar</button>
-            </div>
-        </div>
+        </main>
     </div>
 
-    <div id="modalLibrary" class="modal-overlay">
-        <div class="modal-content" style="max-width: 800px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="margin:0">🏛️ Biblioteca de Entretenimento</h2>
-                <button class="btn btn-ghost" onclick="showLibrary(false)">✕</button>
-            </div>
-            <div class="library-grid" id="libGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:15px;"></div>
-        </div>
-    </div>
-
-    <div id="modalMenuDigital" class="modal-overlay">
-        <div class="modal-content" style="max-width: 450px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="margin:0">🏷️ Menu Digital</h2>
-                <button class="btn btn-ghost" onclick="showMenuModal(false)">✕</button>
-            </div>
-            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Escolha o modelo de exibição de produtos:</p>
-
-            <button class="menu-opt-btn" onclick="abrirSlideUnico()">
-          <span style="font-size: 24px;">🎯</span>
-          <div>
-              <div style="font-weight:600">Slide Produto Único</div>
-              <div style="font-size:12px; color:#666">Foca em um item por vez.</div>
-          </div>
-      </button>
-
-            <button class="menu-opt-btn" onclick="abrirSlideVariado()">
-          <span style="font-size: 24px;">📦</span>
-          <div>
-              <div style="font-weight:600">Slide Produtos Variados</div>
-              <div style="font-size:12px; color:#666">Exibe múltiplos itens em grade.</div>
-          </div>
-      </button>
-        </div>
-    </div>
-
-    <div id="toast" class="toast"></div>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDiTbWSlcKpsPEtEzPkSU0jHZkfcAg5fNU",
             authDomain: "newsmartonapp.firebaseapp.com",
             projectId: "newsmartonapp",
-            databaseURL: "https://newsmartonapp-default-rtdb.firebaseio.com",
-            storageBucket: "newsmartonapp.firebasestorage.app"
+            storageBucket: "newsmartonapp.firebasestorage.app",
+            messagingSenderId: "1096968028299",
+            appId: "1:1096968028299:web:f3a9e48db108afbbb7548e"
         };
 
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
         const auth = firebase.auth();
-        let playlistLocal = [];
+        const database = firebase.database();
+        const firestore = firebase.firestore();
 
-        const CORES_PADRAO = {
-            logoUrl: "./audio/logo.png",
-            corFooter: "#212529",
-            corFooterText: "#ffffff",
-            corNumero: "#ffcc00",
-            showFooter: true,
-            showLogoFooter: true
-        };
-
+        const LOGO_PADRAO = "Exibidor/audio/logo.png";
         const urlParams = new URLSearchParams(window.location.search);
-        const deviceId = urlParams.get('device');
+        const deviceFromUrl = urlParams.get('device');
+        let painelIdAtivo = deviceFromUrl || localStorage.getItem('painelId');
 
-        function getDeviceRef() {
-            const user = auth.currentUser;
-            if (!user || !deviceId) return null;
-            return db.collection('usuarios').doc(user.uid).collection('dispositivos').doc(deviceId);
+        if (deviceFromUrl) localStorage.setItem('painelId', deviceFromUrl);
+
+        function toggleModal() {
+            const modal = document.getElementById('modalInfo');
+            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                if (!deviceId) {
-                    alert("ID do dispositivo não encontrado na URL.");
-                    window.location.href = '../index.html';
-                    return;
-                }
-                document.body.style.display = 'flex';
-                document.getElementById('userEmail').textContent = user.email.split('@')[0];
+        function closeModal(e) {
+            if (e.target.id === 'modalInfo') toggleModal();
+        }
 
-                const ref = getDeviceRef();
-                ref.onSnapshot(doc => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        playlistLocal = data.midias || [];
-                        carregarInterfaceConfigs(data.config || {});
-                        listarMidias();
-                        renderizarFrases(data.fraseRodape || []);
+        function copyValue(elementId) {
+            const el = document.getElementById(elementId);
+            const text = el.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const original = el.textContent;
+                el.textContent = "Copiado!";
+                setTimeout(() => el.textContent = original, 1000);
+            });
+        }
+
+        function formatarDataSinal(timestamp) {
+            if (!timestamp) return "--/--/-- --:--";
+            const dataSinal = new Date(timestamp);
+            const agora = new Date();
+            const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+            const ontem = new Date(hoje);
+            ontem.setDate(ontem.getDate() - 1);
+
+            const dataComparacao = new Date(dataSinal.getFullYear(), dataSinal.getMonth(), dataSinal.getDate());
+            const horaFormatada = dataSinal.toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            if (dataComparacao.getTime() === hoje.getTime()) return `Hoje às ${horaFormatada}`;
+            if (dataComparacao.getTime() === ontem.getTime()) return `Ontem às ${horaFormatada}`;
+            return `${dataSinal.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às ${horaFormatada}`;
+        }
+
+        function calcularInatividade(timestamp) {
+            if (!timestamp) return "--";
+            const agora = Date.now();
+            const diffMs = agora - timestamp;
+            const diffSec = Math.floor(diffMs / 1000);
+
+            if (diffSec < 0) return "0s";
+            if (diffSec < 60) return `${diffSec}s`;
+
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHr = Math.floor(diffMin / 60);
+            const diffDia = Math.floor(diffHr / 24);
+
+            if (diffDia > 0) return `${diffDia}d ${diffHr % 24}h`;
+            if (diffHr > 0) return `${diffHr}h ${diffMin % 60}m`;
+            return `${diffMin}min ${diffSec % 60}s`;
+        }
+
+        async function initAuth() {
+            return new Promise((resolve) => {
+                auth.onAuthStateChanged(async user => {
+                    if (!user) {
+                        window.location.href = `login.html?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+                        return;
                     }
+                    if (!painelIdAtivo) {
+                        window.location.href = "hub.html";
+                        return;
+                    }
+
+                    document.getElementById('uidVal').textContent = user.uid;
+                    document.getElementById('didVal').textContent = painelIdAtivo;
+                    document.getElementById('userLabel').textContent = user.email;
+
+                    try {
+                        const devRef = firestore.collection('usuarios').doc(user.uid).collection('dispositivos').doc(painelIdAtivo);
+                        devRef.onSnapshot(doc => {
+                            const imgEl = document.getElementById('logoImg');
+                            const placeholder = document.getElementById('logoPlaceholder');
+                            let logoUrlFinal = LOGO_PADRAO;
+
+                            if (doc.exists && doc.data().config && doc.data().config.logoUrl) {
+                                logoUrlFinal = doc.data().config.logoUrl;
+                            } else if (doc.exists && doc.data().logoUrl) {
+                                logoUrlFinal = doc.data().logoUrl;
+                            }
+
+                            imgEl.src = logoUrlFinal;
+                            imgEl.onload = () => {
+                                imgEl.style.display = 'block';
+                                placeholder.style.display = 'none';
+                            };
+                            imgEl.onerror = () => {
+                                if (!imgEl.src.includes(LOGO_PADRAO)) imgEl.src = LOGO_PADRAO;
+                            };
+
+                            const nome = doc.exists ? (doc.data().nomeTela || doc.data().nome || painelIdAtivo) : painelIdAtivo;
+                            document.getElementById('empresaLabel').textContent = nome;
+                        });
+
+                    } catch (e) {
+                        console.error("Erro:", e);
+                        document.getElementById('empresaLabel').textContent = "Terminal Ativo";
+                    }
+                    resolve({
+                        uid: user.uid,
+                        deviceId: painelIdAtivo
+                    });
+                });
+            });
+        }
+
+        function startMonitoring(data) {
+            database.ref('.info/connected').on('value', snap => {
+                const isOnline = snap.val();
+                document.getElementById("iconConexao").className = isOnline ? "dot active pulse" : "dot error";
+                document.getElementById("statusConexao").innerText = isOnline ? "Sistema Ativo" : "Desconectado";
+            });
+
+            const LIMITE_INATIVIDADE = 2 * 60 * 1000;
+
+            database.ref(`exibicoes/${data.uid}/${data.deviceId}`).on('value', snap => {
+                const logsRaw = snap.val();
+
+                if (logsRaw) {
+                    const logsTratados = Object.values(logsRaw)
+                        .map(l => {
+                            let ts = Number(l.timestamp);
+                            if (isNaN(ts) && l.timestamp) ts = new Date(l.timestamp).getTime();
+                            if (ts > 0 && ts < 1e12) ts = ts * 1000;
+                            return ts;
+                        })
+                        .filter(ts => !isNaN(ts) && ts > 0)
+                        .sort((a, b) => b - a);
+
+                    if (logsTratados.length > 0) {
+                        const ultimoTimestamp = logsTratados[0];
+                        const agora = Date.now();
+                        const diffMs = agora - ultimoTimestamp;
+                        const isOffline = diffMs > LIMITE_INATIVIDADE;
+
+                        document.getElementById("lastSync").innerText = formatarDataSinal(ultimoTimestamp);
+
+                        const iconPainel = document.getElementById("iconPainel");
+                        const textPainel = document.getElementById("textPainel");
+                        const inativoLabel = document.getElementById("inativoTime");
+
+                        inativoLabel.innerText = `Inativo há: ${calcularInatividade(ultimoTimestamp)}`;
+
+                        if (!isOffline) {
+                            iconPainel.className = "dot active pulse";
+                            textPainel.innerText = "Online";
+                            textPainel.style.color = "var(--success)";
+                        } else {
+                            iconPainel.className = "dot error";
+                            textPainel.innerText = "Offline";
+                            textPainel.style.color = "var(--error)";
+                        }
+                        return;
+                    }
+                }
+
+                document.getElementById("textPainel").innerText = "Sem Dados";
+                document.getElementById("iconPainel").className = "dot";
+                document.getElementById("lastSync").innerText = "--/--/-- --:--";
+            });
+        }
+
+        function setupNavigation() {
+            document.querySelectorAll('.card').forEach(card => {
+                const baseUrl = card.getAttribute('data-href');
+                const finalUrl = `${baseUrl}?device=${painelIdAtivo}`;
+
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('.btn-nova-guia')) window.location.href = finalUrl;
                 });
 
-                renderLibrary();
-            } else {
-                window.location.href = '../login.html';
+                card.querySelector('.btn-nova-guia').setAttribute('href', finalUrl);
+            });
+
+            document.getElementById('btnLogout').addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm("Encerrar sessão?")) {
+                    auth.signOut().then(() => {
+                        localStorage.clear();
+                        window.location.href = 'login.html';
+                    });
+                }
+            });
+        }
+
+        initAuth().then(data => {
+            if (data) {
+                startMonitoring(data);
+                setupNavigation();
             }
         });
-
-        function logout() {
-            auth.signOut();
-        }
-
-        function carregarInterfaceConfigs(data) {
-            const safeSet = (id, val, attr = 'value') => {
-                const el = document.getElementById(id);
-                if (el) el[attr] = val;
-            };
-
-            safeSet('cfgLogo', (data.logoUrl === CORES_PADRAO.logoUrl) ? '' : (data.logoUrl || ''));
-            safeSet('cfgColorFoot', data.corFooter || CORES_PADRAO.corFooter);
-            safeSet('cfgColorFootText', data.corFooterText || CORES_PADRAO.corFooterText);
-            safeSet('cfgShowFooter', data.showFooter !== undefined ? data.showFooter : true, 'checked');
-            safeSet('cfgShowLogoFooter', data.showLogoFooter !== undefined ? data.showLogoFooter : true, 'checked');
-
-            const navLogo = document.getElementById('nav-logo');
-            if (navLogo) navLogo.src = data.logoUrl || CORES_PADRAO.logoUrl;
-        }
-
-        async function salvarConfiguracoes() {
-            const ref = getDeviceRef();
-            const btn = document.getElementById('btnSalvarConfig');
-
-            const logoInput = document.getElementById('cfgLogo');
-            const showFooterInput = document.getElementById('cfgShowFooter');
-            const showLogoFooterInput = document.getElementById('cfgShowLogoFooter');
-            const colorFootInput = document.getElementById('cfgColorFoot');
-            const colorFootTextInput = document.getElementById('cfgColorFootText');
-
-            btn.disabled = true;
-            btn.innerText = "Salvando...";
-
-            try {
-                const novasConfigs = {
-                    logoUrl: logoInput.value.trim() || CORES_PADRAO.logoUrl,
-                    corFooter: colorFootInput.value,
-                    corFooterText: colorFootTextInput.value,
-                    corNumero: CORES_PADRAO.corNumero,
-                    showFooter: showFooterInput.checked,
-                    showLogoFooter: showLogoFooterInput.checked
-                };
-
-                await ref.set({
-                    config: novasConfigs
-                }, {
-                    merge: true
-                });
-                showToast('✅ Configurações Salvas!');
-                updatePreviewLogo();
-            } catch (err) {
-                console.error("Erro ao salvar:", err);
-                showToast('❌ Erro ao salvar');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Aplicar Mudanças";
-            }
-        }
-
-        async function restaurarCoresPadrao() {
-            if (confirm("Restaurar cores e logo padrão?")) {
-                await getDeviceRef().set({
-                    config: CORES_PADRAO
-                }, {
-                    merge: true
-                });
-                showToast('🔄 Padrão Restaurado');
-            }
-        }
-
-        function listarMidias() {
-            const container = document.getElementById('list');
-            const searchInput = document.getElementById('searchInput');
-            const search = searchInput ? searchInput.value.toLowerCase() : '';
-            container.innerHTML = '';
-
-            let visiveis = 0;
-            playlistLocal.forEach((midia, index) => {
-                if (search && !midia.nome.toLowerCase().includes(search)) return;
-                visiveis++;
-
-                let thumbContent = '';
-                const url = midia.url ? midia.url.trim() : '';
-
-                if (midia.tipo === 'IMAGEM') {
-                    thumbContent = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;">`;
-                } else if (midia.tipo === 'VIDEO') {
-                    thumbContent = `<video src="${url}#t=0.1" preload="metadata" muted style="width:100%; height:100%; object-fit:cover; background:#000;"></video>`;
-                } else {
-                    let finalUrl = url;
-                    if (url.includes("docs.google.com/presentation")) {
-                        finalUrl = url.replace(/\/pub\?/, "/embed?").replace(/\/edit(#.*)?$/, "/embed");
-                    }
-
-                    // Ajuste de escala: Definimos 300px de largura (tamanho mobile) e reduzimos para caber em 80px (0.26)
-                    thumbContent = `
-                <div style="width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: white;">
-                    <iframe src="${finalUrl}" 
-                            style="width: 300px; height: 200px; border: none; transform: scale(0.27); transform-origin: center; pointer-events: none;" 
-                            scrolling="no"></iframe>
-                </div>`;
-                }
-
-                const card = document.createElement('div');
-                card.className = 'media-card';
-                card.dataset.index = index;
-                card.innerHTML = `
-            <div class="thumb-box" style="width: 80px; height: 50px; min-width: 80px; border-radius: 6px; overflow: hidden; background: #f3f4f6; border: 1px solid #ddd; position: relative; display: flex; align-items: center; justify-content: center;">
-                ${thumbContent}
-            </div>
-            <div style="flex: 1; margin-left: 12px; overflow: hidden;">
-                <div style="font-weight: 600; font-size: 13px; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    ${midia.nome}
-                </div>
-                <div style="font-size: 11px; color: #6b7280;">${midia.tipo} • ${midia.duracao || 12}s</div>
-            </div>
-            <div style="display: flex; gap: 4px;">
-                <button class="btn btn-ghost" onclick="editarDuracao(${index}, ${midia.duracao || 12})">🕒</button>
-                <button class="btn btn-ghost" onclick="excluirMidia(${index})" style="color: #ef4444;">🗑️</button>
-            </div>
-        `;
-                container.appendChild(card);
-            });
-
-            if (document.getElementById('noMedia')) {
-                document.getElementById('noMedia').style.display = visiveis === 0 ? 'block' : 'none';
-            }
-        }
-
-        async function editarDuracao(index, atual) {
-            const nova = prompt("Tempo de exibição (segundos):", atual);
-            if (nova !== null && !isNaN(nova) && nova > 0) {
-                playlistLocal[index].duracao = parseInt(nova);
-                await salvarPlaylist();
-                showToast("⏱️ Tempo atualizado");
-            }
-        }
-
-        async function adicionarMidia() {
-            const nome = document.getElementById('nomeMidia').value || 'Nova Mídia';
-            const url = document.getElementById('linkMidia').value;
-            if (!url) return alert("URL obrigatória");
-
-            const novaMidia = {
-                nome,
-                url,
-                tipo: detectaTipoUrl(url),
-                duracao: 12,
-                ativo: true
-            };
-
-            playlistLocal.push(novaMidia);
-            await salvarPlaylist();
-
-            showModal(false);
-            document.getElementById('nomeMidia').value = '';
-            document.getElementById('linkMidia').value = '';
-            showToast("✅ Mídia adicionada");
-        }
-
-        async function addLib(n, u) {
-            playlistLocal.push({
-                nome: n,
-                url: u,
-                tipo: 'Entretenimento',
-                duracao: 15,
-                ativo: true
-            });
-            await salvarPlaylist();
-            showLibrary(false);
-            showToast("✅ App Adicionado");
-        }
-
-        async function excluirMidia(index) {
-            if (confirm("Excluir mídia?")) {
-                playlistLocal.splice(index, 1);
-                await salvarPlaylist();
-            }
-        }
-
-        async function salvarPlaylist() {
-            const ref = getDeviceRef();
-            if (!ref) return;
-            await ref.update({
-                midias: playlistLocal
-            });
-        }
-
-        async function adicionarFrase() {
-            const txt = document.getElementById('novaFrase').value.trim();
-            if (!txt) return;
-
-            const ref = getDeviceRef();
-            const doc = await ref.get();
-            const arr = doc.exists && doc.data().fraseRodape ? doc.data().fraseRodape : [];
-            arr.push(txt);
-
-            await ref.update({
-                fraseRodape: arr
-            });
-            document.getElementById('novaFrase').value = '';
-            showToast("✅ Frase adicionada");
-        }
-
-        function renderizarFrases(arr) {
-            const list = document.getElementById('fraseList');
-            list.innerHTML = '';
-            arr.forEach((f, i) => {
-                const item = document.createElement('div');
-                item.style = "background:#f9fafb; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px; border:1px solid #eee";
-                item.innerHTML = `<span>${f}</span><button onclick="removerFrase(${i})" style="border:none;background:none;color:red;cursor:pointer">✕</button>`;
-                list.appendChild(item);
-            });
-        }
-
-        async function removerFrase(index) {
-            const ref = getDeviceRef();
-            const doc = await ref.get();
-            const arr = doc.data().fraseRodape || [];
-            arr.splice(index, 1);
-            await ref.update({
-                fraseRodape: arr
-            });
-            showToast("🗑️ Frase removida");
-        }
-
-        function showModal(s) {
-            document.getElementById('backdrop').classList.toggle('show', s);
-        }
-
-        function showLibrary(s) {
-            document.getElementById('modalLibrary').classList.toggle('show', s);
-        }
-
-        function showMenuModal(s) {
-            document.getElementById('modalMenuDigital').classList.toggle('show', s);
-        }
-
-        function showToast(m) {
-            const t = document.getElementById('toast');
-            t.textContent = m;
-            t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 3000);
-        }
-
-        function detectaTipoUrl(url) {
-            const clean = url.split('?')[0].toLowerCase();
-            if (['.mp4', '.webm'].some(ext => clean.endsWith(ext))) return 'VIDEO';
-            if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].some(ext => clean.endsWith(ext))) return 'IMAGEM';
-            return 'HTML';
-        }
-
-        function detectaTipoInstantaneo() {
-            const val = document.getElementById('linkMidia').value;
-            const box = document.getElementById('detectTypeBox');
-            if (!val) {
-                box.innerHTML = '';
-                return;
-            }
-            box.innerHTML = `<span style="font-size:10px; color:#666">Tipo detectado: <b>${detectaTipoUrl(val)}</b></span>`;
-        }
-
-        function abrirSlideUnico() {
-            const params = new URLSearchParams(window.location.search);
-            // Tenta pegar 'device' ou 'id', o que estiver disponível
-            const deviceId = params.get("device") || params.get("id");
-
-            if (!deviceId) return alert("Erro: ID do dispositivo não encontrado na URL atual.");
-
-            // Redireciona sempre usando 'device' para manter o padrão
-            window.location.href = "../menudigitalonly.html?device=" + deviceId;
-        }
-
-        function abrirSlideVariado() {
-            const params = new URLSearchParams(window.location.search);
-            const deviceId = params.get("device") || params.get("id");
-
-            if (!deviceId) return alert("Erro: ID do dispositivo não encontrado.");
-
-            window.location.href = "../menudigitalpack.html?device=" + deviceId;
-        }
-
-       function renderLibrary() {
-    const grid = document.getElementById('libGrid');
-
-    // Organização dos dados por categoria
-    const categorias = [
-        {
-            titulo: "🌤️ Utilidades e Clima",
-            apps: [
-                { nome: "📅 Neste Dia", url: "https://marcelonstos-byte.github.io/dinamics/NesteDia/index.html" },
-                { nome: "🌤️ Clima BTG", url: "https://marcelonascimento98.github.io/clm4btg/" },
-                { nome: "💵 Moedas V1", url: "https://marcelonstos-byte.github.io/dinamics/Conversor%20de%20Moedas/index.html" },
-                { nome: "💵 Moedas V2", url: "https://marcelonstos-byte.github.io/dinamics/Conversor%20de%20Moedas/index1.html" },
-                { nome: "⌚ Relógio Main", url: "https://marcelonstos-byte.github.io/r3l0gio/" }
-            ]
-        }, 
-        {
-            titulo: "📰 Conteúdo e News",
-            apps: [
-                { nome: "🎵 Top Hits", url: "https://marcelonstos-byte.github.io/dinamics/TopHits/index.html" },
-                { nome: "🎭 Novelas", url: "https://marcelonstos-byte.github.io/dinamics/news%20-%20Novelas/index.html" },
-                { nome: "📰 G1 News", url: "https://marcelonstos-byte.github.io/dinamics/news%20-%20g1/index.html" },
-                { nome: "🗞️ Gazeta", url: "https://marcelonstos-byte.github.io/dinamics/news%20-%20Gazeta/index.html" },
-                { nome: "🎬 AdoroCinema", url: "https://marcelonstos-byte.github.io/dinamics/AdoroCinema/index.html" },
-                { nome: "🎬 Prime Videos", url: "https://marcelonstos-byte.github.io/dinamics/PrimeVideos/index.html" },
-                { nome: "💻 TecMundo", url: "https://marcelonstos-byte.github.io/dinamics/TecMundo/index.html" }
-            ]
-        }, 
-        {
-            titulo: "🎰 Diversos e Jogos",
-            apps: [
-                { nome: "🎰 MegaSena V1", url: "https://marcelonstos-byte.github.io/dinamics/MegaSena/index.html" },
-                { nome: "🎰 MegaSena V2", url: "https://marcelonstos-byte.github.io/dinamics/MegaSena/index1.html" },
-                { nome: "✨ Horóscopo", url: "https://marcelonstos-byte.github.io/dinamics/horoscopohorizontal-main/index.html" },
-                { nome: "🤖 I.A. Portal", url: "https://marcelonstos-byte.github.io/dinamics/Intelig%C3%AAncia%20Artificial/AI.html" },
-                { nome: "✨ Uau!", url: "https://marcelonascimento98.github.io/videincrivel/" },
-                { nome: "😂 Engraçados", url: "https://marcelonstos-byte.github.io/dinamics/Engra%C3%A7ados/index.html" },
-                { nome: "📜 Frases", url: "https://marcelonascimento98.github.io/fr453s/" },
-                { nome: "📜 Nosso Brasil", url: "https://marcelonstos-byte.github.io/dinamics/NossoBrasil/index.html" }
-            ]
-        }, 
-        {
-            titulo: "🗺️ Monitoramento",
-            apps: [
-                { nome: "🗺️ Waze Map", url: "https://embed.waze.com/iframe?zoom=13&lat=-23.816993&lon=-46.103783&ct=livemap" }
-            ]
-        }
-    ];
-
-    // Aqui deve vir a lógica para percorrer 'categorias' e inserir no 'grid'
-}
-            // Renderização com títulos de categoria
-            grid.innerHTML = categorias.map(cat => `
-        <div style="grid-column: 1 / -1; margin-top: 20px; padding-bottom: 8px; border-bottom: 1px solid #eee; font-size: 13px; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">
-            ${cat.titulo}
-        </div>
-        ${cat.apps.map(app => `
-            <div class="lib-card" onclick="addLib('${app.nome}','${app.url}')">
-                <div class="lib-thumb">
-                    <iframe src="${app.url}" scrolling="no"></iframe>
-                </div>
-                <div style="font-size:12px; font-weight:600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px;">
-                    ${app.nome}
-                </div>
-                <div style="font-size:10px; color:#1058a2; margin-top:4px;">+ Adicionar</div>
-            </div>
-        `).join('')}
-    `).join('');
-
     </script>
 </body>
 
 </html>
-
-
-
-
