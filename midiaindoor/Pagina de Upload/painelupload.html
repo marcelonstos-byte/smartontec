@@ -676,17 +676,10 @@
             }
         }
 
-        function updatePreviewLogo() {
-            const el = document.getElementById('cfgLogo');
-            if (el) {
-                const url = el.value.trim();
-                document.getElementById('nav-logo').src = url || CORES_PADRAO.logoUrl;
-            }
-        }
-
         function listarMidias() {
             const container = document.getElementById('list');
-            const search = document.getElementById('searchInput').value.toLowerCase();
+            const searchInput = document.getElementById('searchInput');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
             container.innerHTML = '';
 
             let visiveis = 0;
@@ -695,42 +688,51 @@
                 visiveis++;
 
                 let thumbContent = '';
+                const url = midia.url ? midia.url.trim() : '';
+
                 if (midia.tipo === 'IMAGEM') {
-                    thumbContent = `<img src="${midia.url}">`;
+                    thumbContent = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;">`;
+                } else if (midia.tipo === 'VIDEO') {
+                    thumbContent = `<video src="${url}#t=0.1" preload="metadata" muted style="width:100%; height:100%; object-fit:cover; background:#000;"></video>`;
                 } else {
-                    thumbContent = `<iframe src="${midia.url}" scrolling="no"></iframe>`;
+                    let finalUrl = url;
+                    if (url.includes("docs.google.com/presentation")) {
+                        finalUrl = url.replace(/\/pub\?/, "/embed?").replace(/\/edit(#.*)?$/, "/embed");
+                    }
+
+                    // Ajuste de escala: Definimos 300px de largura (tamanho mobile) e reduzimos para caber em 80px (0.26)
+                    thumbContent = `
+                <div style="width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: white;">
+                    <iframe src="${finalUrl}" 
+                            style="width: 300px; height: 200px; border: none; transform: scale(0.27); transform-origin: center; pointer-events: none;" 
+                            scrolling="no"></iframe>
+                </div>`;
                 }
 
                 const card = document.createElement('div');
                 card.className = 'media-card';
                 card.dataset.index = index;
                 card.innerHTML = `
-          <div class="thumb-box">${thumbContent}</div>
-          <div style="flex:1">
-            <div style="font-weight:600; font-size:13px; color:#111;">${midia.nome}</div>
-            <div style="font-size:11px; color:#666">${midia.tipo} | ${midia.duracao || 12}s</div>
-          </div>
-          <div style="display:flex; gap:5px;">
-             <button class="btn btn-ghost" onclick="editarDuracao(${index}, ${midia.duracao || 12})" title="Tempo">🕒</button>
-             <button class="btn btn-ghost" onclick="excluirMidia(${index})" style="color:red">🗑️</button>
-          </div>
+            <div class="thumb-box" style="width: 80px; height: 50px; min-width: 80px; border-radius: 6px; overflow: hidden; background: #f3f4f6; border: 1px solid #ddd; position: relative; display: flex; align-items: center; justify-content: center;">
+                ${thumbContent}
+            </div>
+            <div style="flex: 1; margin-left: 12px; overflow: hidden;">
+                <div style="font-weight: 600; font-size: 13px; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${midia.nome}
+                </div>
+                <div style="font-size: 11px; color: #6b7280;">${midia.tipo} • ${midia.duracao || 12}s</div>
+            </div>
+            <div style="display: flex; gap: 4px;">
+                <button class="btn btn-ghost" onclick="editarDuracao(${index}, ${midia.duracao || 12})">🕒</button>
+                <button class="btn btn-ghost" onclick="excluirMidia(${index})" style="color: #ef4444;">🗑️</button>
+            </div>
         `;
                 container.appendChild(card);
             });
 
-            document.getElementById('noMedia').style.display = visiveis === 0 ? 'block' : 'none';
-
-            new Sortable(container, {
-                animation: 150,
-                onEnd: () => {
-                    const novaOrdem = [];
-                    container.querySelectorAll('.media-card').forEach(el => {
-                        novaOrdem.push(playlistLocal[el.dataset.index]);
-                    });
-                    playlistLocal = novaOrdem;
-                    salvarPlaylist();
-                }
-            });
+            if (document.getElementById('noMedia')) {
+                document.getElementById('noMedia').style.display = visiveis === 0 ? 'block' : 'none';
+            }
         }
 
         async function editarDuracao(index, atual) {
