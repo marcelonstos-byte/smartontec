@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Gerenciador Pro — ChamadorApp</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+  <style>
+    :root { 
+      --bg: #f0f2f5; 
+      --surface: #ffffff; 
+      --primary: #1058a2; 
+      --primary-dark: #0d4682;
+      --danger: #ff4d4f;
+      --success: #52c41a;
+      --radius: 16px; 
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+    }
+
+    body { margin: 0; background: var(--bg); color: #1f2937; display: none; flex-direction: column; min-height: 100vh; }
+    * { box-sizing: border-box; transition: all 0.2s ease; }
+
+    .top-bar { background: #fff; padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 50; }
+    .brand-area { display: flex; align-items: center; gap: 15px; }
+    .logo-preview { width: 40px; height: 40px; border-radius: 10px; object-fit: contain; background: #f9fafb; border: 1px solid #eee; }
+    
+    .account-info { display: flex; align-items: center; gap: 10px; background: #f3f4f6; padding: 6px 14px; border-radius: 100px; border: 1px solid #e5e7eb; }
+    .account-name { font-size: 13px; font-weight: 600; color: #374151; }
+    .logout-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 12px; font-weight: bold; padding: 0 5px; }
+
+    .main-container { display: grid; grid-template-columns: 1fr 380px; gap: 25px; padding: 25px 40px; flex: 1; max-width: 1600px; margin: 0 auto; width: 100%; }
+    @media (max-width: 1100px) { .main-container { grid-template-columns: 1fr; } }
+
+    .glass-panel { background: var(--surface); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.7); height: fit-content; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+    h2 { margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 10px; color: #111827; }
+
+    .input-group { margin-bottom: 15px; }
+    .input-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #4b5563; }
+    input[type="text"], input[type="number"], input[type="search"] { 
+      width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #d1d5db; background: #f9fafb; outline: none;
+    }
+    input:focus { border-color: #1058a2; box-shadow: 0 0 0 3px rgba(16,88,162,0.1); }
+    
+    .btn { padding: 10px 18px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
+    .btn-primary { background: #1058a2; color: white; }
+    .btn-ghost { background: #f3f4f6; color: #374151; }
+    .btn-outline { background: transparent; border: 1px solid #d1d5db; color: #374151; }
+    .btn-purple { background: #6366f1; color: white; }
+    .btn-danger-outline { background: transparent; border: 1px solid var(--danger); color: var(--danger); margin-top: 10px; width: 100%; }
+    .btn-danger-outline:hover { background: var(--danger); color: white; }
+
+    .media-grid { display: grid; gap: 12px; }
+    .media-card { 
+      display: flex; align-items: center; gap: 15px; padding: 12px; background: #fff; 
+      border-radius: 12px; border: 1px solid #edf2f7; cursor: grab; position: relative;
+    }
+    .media-card:hover { border-color: var(--primary); }
+    .media-card.sortable-ghost { opacity: 0.3; border: 2px dashed var(--primary); }
+
+    .thumb-box { 
+      width: 80px; height: 50px; border-radius: 8px; background: #000; 
+      overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .thumb-box iframe { 
+        width: 1024px; height: 768px; transform: scale(0.08); transform-origin: 0 0;
+        border: none; pointer-events: none; position: absolute; top: 0; left: 0;
+    }
+    .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+    .modal-overlay.show { display: flex; }
+    .modal-content { background: white; width: 95%; max-width: 800px; padding: 30px; border-radius: 20px; max-height: 90vh; overflow-y: auto; }
+    
+    .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 20px; }
+    .library-item { border: 1px solid #eee; border-radius: 14px; padding: 12px; text-align: center; cursor: pointer; background: #fff; transition: all 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .library-item:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+    .library-thumb-wrapper { 
+        width: 100%; height: 100px; background: #000; border-radius: 8px; margin-bottom: 10px; 
+        position: relative; overflow: hidden; border: 1px solid #eee;
+    }
+    .library-thumb-wrapper iframe {
+        width: 1280px; height: 720px; border: none;
+        transform: scale(0.14); transform-origin: 0 0;
+        pointer-events: none;
+    }
+
+    .toast { position: fixed; bottom: 20px; right: 20px; background: #1f2937; color: white; padding: 12px 24px; border-radius: 10px; display: none; z-index: 200; }
+    
+    input[type="color"] {
+        height: 40px; cursor: pointer; border: 1px solid #d1d5db; padding: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="top-bar">
+    <div class="brand-area">
+      <button class="btn btn-outline" onclick="window.location.href='../index.html'" style="padding: 8px 12px;">← Voltar</button>
+      <img id="nav-logo" src="" class="logo-preview" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4406/4406167.png'">
+      <h1 style="margin:0; font-size:1.1rem; color:#111827;">Painel de Controle</h1>
+    </div>
+    <div class="account-info">
+      <span class="account-name" id="userEmail">Usuário</span>
+      <button class="logout-btn" onclick="logout()">SAIR</button>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <section class="glass-panel">
+      <div class="panel-header">
+        <h2>📂 Playlist de Mídias</h2>
+        <div style="display:flex; gap:10px; flex: 1; justify-content: flex-end; min-width: 300px;">
+          <input id="searchInput" type="search" placeholder="Procurar..." oninput="listarMidias()" style="max-width:150px;">
+          <button class="btn btn-purple" onclick="showLibrary(true)">🏛️ Biblioteca de Apps</button>
+          <button class="btn btn-primary" onclick="showModal(true)">+ Upload Manual</button>
+        </div>
+      </div>
+      
+      <div id="list" class="media-grid"></div>
+      <div id="noMedia" style="text-align:center; padding:40px; color:#9ca3af; display:none;">A playlist está vazia.</div>
+    </section>
+
+    <aside style="display:flex; flex-direction:column; gap:25px;">
+      <section class="glass-panel" style="border-top: 4px solid #1058a2;">
+        <h2>🎨 Identidade Visual</h2>
+        <div class="input-group">
+          <label>URL do Logotipo</label>
+          <input id="cfgLogo" type="text" placeholder="Usando logotipo padrão..." onblur="updatePreviewLogo()">
+        </div>
+        <div class="color-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="input-group">
+            <label>Cabeçalho</label>
+            <input type="color" id="cfgColorHead">
+          </div>
+          <div class="input-group">
+            <label>Rodapé</label>
+            <input type="color" id="cfgColorFoot">
+          </div>
+        </div>
+        <div class="input-group">
+            <label>Cor da Senha Chamada</label>
+            <input type="color" id="cfgColorNum" style="width: 100%;">
+        </div>
+        <button class="btn btn-primary" onclick="salvarConfiguracoes()" style="width:100%;">Aplicar</button>
+        
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+        <button class="btn btn-danger-outline" onclick="restaurarCoresPadrao()">Restaurar Cores Padrão</button>
+      </section>
+
+      <section class="glass-panel">
+        <h2>📝 Rodapé</h2>
+        <div style="display:flex; gap:8px; margin-bottom:15px;">
+          <input id="novaFrase" type="text" placeholder="Nova frase..." maxlength="120">
+          <button class="btn btn-primary" onclick="adicionarFrase()">Add</button>
+        </div>
+        <div id="fraseList" style="max-height: 200px; overflow-y: auto; display:flex; flex-direction:column; gap:8px;"></div>
+      </section>
+    </aside>
+  </main>
+
+  <div id="backdrop" class="modal-overlay">
+    <div class="modal-content" style="max-width: 450px;">
+      <h2 style="margin-top:0">➕ Adicionar Mídia</h2>
+      <div class="input-group">
+        <label>Nome</label>
+        <input id="nomeMidia" type="text" placeholder="Ex: Vídeo Institucional">
+      </div>
+      <div class="input-group">
+        <label>URL</label>
+        <input id="linkMidia" type="text" placeholder="Link do vídeo, imagem ou site..." oninput="detectaTipoInstantaneo()">
+        <div id="detectTypeBox" style="margin-top:5px;"></div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+        <button class="btn btn-ghost" onclick="showModal(false)">Cancelar</button>
+        <button class="btn btn-primary" onclick="adicionarMidia()">Salvar Mídia</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalLibrary" class="modal-overlay">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0">🏛️ Biblioteca de Apps</h2>
+          <button class="btn btn-ghost" onclick="showLibrary(false)">✕</button>
+      </div>
+      <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Selecione um app para adicionar instantaneamente à sua playlist.</p>
+      <div class="library-grid" id="libGrid"></div>
+    </div>
+  </div>
+
+  <input id="fileInput" type="file" accept="image/*,video/*" style="display:none" />
+  <div id="toast" class="toast"></div>
+
+  <script>
+    /* ========== FIREBASE CONFIG ========== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZctgUfiY8t7FNz0XFBw-ha7coircJCsw",
+      authDomain: "chamadorapp.firebaseapp.com",
+      projectId: "chamadorapp",
+      storageBucket: "chamadorapp.firebasestorage.app",
+      messagingSenderId: "149731696019",
+      appId: "1:149731696019:web:ac9cd8c5f4bb1707081c66"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const BIBLIOTECA_DATA = [
+        { nome: "Horóscopo Vertical", url: "https://marcelonascimento98.github.io/hrcvertical/" },
+        { nome: "Horóscopo Horizontal", url: "https://marcelonascimento98.github.io/hrcvertical/" },
+        { nome: "Top Hits", url: "https://marcelonascimento98.github.io/t0phits/" },
+        { nome: "Clima Tempo BTG", url: "https://marcelonascimento98.github.io/clm4btg/" },
+        { nome: "Taxa de Câmbio", url: "https://marcelonascimento98.github.io/txmo3d4/" },
+        { nome: "Relógio", url: "https://smartonmidia.github.io/relogio/" },
+        { nome: "Gazeta do Povo", url: "https://smartonmidia.github.io/gztnels/" },
+        { nome: "Waze", url: "https://embed.waze.com/iframe?zoom=13&lat=-23.816993&lon=-46.103783&ct=livemap" },
+        { nome: "Mega Sena", url: "https://marcelonascimento98.github.io/m3g4s3n4/" },
+        { nome: "Frases Pensadores", url: "https://marcelonascimento98.github.io/fr453s/" }
+    ];
+
+    // PADRÕES ORIGINAIS DO SISTEMA
+    const CORES_PADRAO = {
+        logoUrl: "./audio/logo.png",
+        corHeader: "#003a5f",
+        corFooter: "#212529",
+        corNumero: "#ffcc00"
+    };
+
+    function getEmpresaRef() {
+        const user = auth.currentUser;
+        return user ? db.collection('empresa').doc(user.uid) : null;
+    }
+
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        document.body.style.display = 'flex';
+        // Capitaliza a primeira letra do nome/email
+        const userName = user.email.split('@')[0];
+        document.getElementById('userEmail').textContent = userName.charAt(0).toUpperCase() + userName.slice(1);
+        
+        carregarConfiguracoes();
+        listarMidias();
+        listarFrases();
+        renderLibrary();
+      } else {
+        window.location.href = '../auth.html';
+      }
+    });
+
+    function logout() { auth.signOut(); }
+
+    /* ========== BIBLIOTECA ========== */
+    function renderLibrary() {
+        const grid = document.getElementById('libGrid');
+        grid.innerHTML = '';
+        BIBLIOTECA_DATA.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'library-item';
+            div.onclick = () => selectAndSaveFromLibrary(item);
+            div.innerHTML = `
+                <div class="library-thumb-wrapper">
+                    <iframe src="${item.url}" scrolling="no"></iframe>
+                </div>
+                <div style="font-size:13px; font-weight:600; color:#333;">${item.nome}</div>
+            `;
+            grid.appendChild(div);
+        });
+    }
+
+    async function selectAndSaveFromLibrary(item) {
+        const ref = getEmpresaRef();
+        if (!ref) return;
+        showToast(`⏳ Adicionando ${item.nome}...`);
+        const qSnap = await ref.collection('midias').orderBy('ordem', 'desc').limit(1).get();
+        const ultimaOrdem = qSnap.empty ? 0 : qSnap.docs[0].data().ordem;
+
+        await ref.collection('midias').add({
+            nome: item.nome,
+            url: item.url,
+            tipo: 'HTML',
+            duracao: 15,
+            ordem: ultimaOrdem + 1,
+            ativo: true,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showLibrary(false);
+        listarMidias();
+        showToast(`✅ ${item.nome} adicionado!`);
+    }
+
+    function showLibrary(show) { document.getElementById('modalLibrary').classList.toggle('show', show); }
+
+    /* ========== MÍDIAS DA PLAYLIST ========== */
+    async function listarMidias() {
+      const ref = getEmpresaRef();
+      if (!ref) return;
+      const container = document.getElementById('list');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const qSnap = await ref.collection('midias').orderBy('ordem').get();
+      container.innerHTML = '';
+      
+      let count = 0;
+      qSnap.forEach(doc => {
+        const data = doc.data();
+        if (search && !data.nome.toLowerCase().includes(search)) return;
+        count++;
+
+        const card = document.createElement('div');
+        card.className = 'media-card';
+        card.dataset.id = doc.id;
+        
+        let thumb = '';
+        if(data.tipo === 'HTML') thumb = `<iframe src="${data.url}" scrolling="no"></iframe>`;
+        else if(data.tipo === 'IMAGEM') thumb = `<img src="${data.url}">`;
+        else thumb = `<div style="color:white; font-size:10px">VIDEO</div>`;
+
+        card.innerHTML = `
+          <div class="thumb-box">${thumb}</div>
+          <div style="flex:1">
+            <div style="font-weight:600; font-size:14px;">${data.nome}</div>
+            <span style="font-size:11px; color:#666;">⏱️ ${data.tipo === 'VIDEO' ? 'Auto' : (data.duracao || 15) + 's'}</span>
+          </div>
+          <div style="display:flex; gap:5px;">
+            ${data.tipo !== 'VIDEO' ? `<button class="btn btn-ghost" style="padding:5px" onclick="editarTempo('${doc.id}', ${data.duracao || 15})">⏱️</button>` : ''}
+            <button class="btn btn-ghost" style="padding:5px; color:red" onclick="excluirMidia('${doc.id}')">🗑️</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('noMedia').style.display = count === 0 ? 'block' : 'none';
+      new Sortable(container, { animation: 150, onEnd: salvarNovaOrdem });
+    }
+
+    async function adicionarMidia() {
+      const ref = getEmpresaRef();
+      const nome = document.getElementById('nomeMidia').value;
+      let url = document.getElementById('linkMidia').value;
+      if (!url) return alert('Insira uma URL');
+
+      const tipo = detectaTipoUrl(url);
+      const qSnap = await ref.collection('midias').orderBy('ordem', 'desc').limit(1).get();
+      const ultimaOrdem = qSnap.empty ? 0 : qSnap.docs[0].data().ordem;
+
+      await ref.collection('midias').add({
+        nome: nome || 'Mídia Manual',
+        url: url,
+        tipo: tipo,
+        duracao: 15,
+        ordem: ultimaOrdem + 1,
+        ativo: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      showModal(false);
+      listarMidias();
+      showToast('✅ Mídia Adicionada!');
+      document.getElementById('nomeMidia').value = '';
+      document.getElementById('linkMidia').value = '';
+    }
+
+    async function editarTempo(id, atual) {
+        const novo = prompt("Exibir por quantos segundos?", atual);
+        if (novo && !isNaN(novo)) {
+            await getEmpresaRef().collection('midias').doc(id).update({ duracao: parseInt(novo) });
+            listarMidias();
+        }
+    }
+
+    function detectaTipoUrl(url) {
+      const cleanUrl = url.split('?')[0].toLowerCase();
+      if (['.mp4', '.webm', '.mov'].some(ext => cleanUrl.endsWith(ext))) return 'VIDEO';
+      if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].some(ext => cleanUrl.endsWith(ext))) return 'IMAGEM';
+      return 'HTML';
+    }
+
+    function detectaTipoInstantaneo() {
+      const val = document.getElementById('linkMidia').value;
+      const box = document.getElementById('detectTypeBox');
+      if(!val) { box.innerHTML = ''; return; }
+      const tipo = detectaTipoUrl(val);
+      box.innerHTML = `<span style="font-size:10px; color:#666">Formato identificado: ${tipo}</span>`;
+    }
+
+    async function salvarNovaOrdem() {
+      const ref = getEmpresaRef();
+      const items = document.querySelectorAll('.media-card');
+      const batch = db.batch();
+      items.forEach((item, index) => {
+        batch.update(ref.collection('midias').doc(item.dataset.id), { ordem: index + 1 });
+      });
+      await batch.commit();
+    }
+
+    async function excluirMidia(id) {
+      if (confirm('Remover da playlist?')) {
+        await getEmpresaRef().collection('midias').doc(id).delete();
+        listarMidias();
+      }
+    }
+
+    function showModal(show) { document.getElementById('backdrop').classList.toggle('show', show); }
+    function showToast(msg) { 
+      const t = document.getElementById('toast'); t.textContent = msg; 
+      t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); 
+    }
+
+    async function carregarConfiguracoes() {
+      const ref = getEmpresaRef();
+      ref.collection('config').doc('visual').onSnapshot(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          // Se for a logo padrão, o input fica vazio para mostrar o placeholder
+          document.getElementById('cfgLogo').value = (data.logoUrl === CORES_PADRAO.logoUrl) ? '' : (data.logoUrl || '');
+          
+          document.getElementById('cfgColorHead').value = data.corHeader || CORES_PADRAO.corHeader;
+          document.getElementById('cfgColorFoot').value = data.corFooter || CORES_PADRAO.corFooter;
+          document.getElementById('cfgColorNum').value = data.corNumero || CORES_PADRAO.corNumero;
+          
+          // No preview da barra superior, sempre mostra uma imagem válida
+          document.getElementById('nav-logo').src = data.logoUrl || CORES_PADRAO.logoUrl;
+        }
+      });
+    }
+
+    async function salvarConfiguracoes() {
+      let urlInput = document.getElementById('cfgLogo').value.trim();
+      // Se o usuário salvar vazio, gravamos o caminho padrão no banco
+      const logoParaSalvar = urlInput === "" ? CORES_PADRAO.logoUrl : urlInput;
+
+      await getEmpresaRef().collection('config').doc('visual').set({
+        logoUrl: logoParaSalvar,
+        corHeader: document.getElementById('cfgColorHead').value,
+        corFooter: document.getElementById('cfgColorFoot').value,
+        corNumero: document.getElementById('cfgColorNum').value 
+      }, { merge: true });
+      showToast('✅ Identidade Aplicada!');
+    }
+
+    async function restaurarCoresPadrao() {
+        if(confirm("Deseja voltar para a identidade visual original do sistema?")) {
+            // Limpa o campo visualmente
+            document.getElementById('cfgLogo').value = "";
+            document.getElementById('cfgColorHead').value = CORES_PADRAO.corHeader;
+            document.getElementById('cfgColorFoot').value = CORES_PADRAO.corFooter;
+            document.getElementById('cfgColorNum').value = CORES_PADRAO.corNumero;
+            
+            await salvarConfiguracoes();
+            updatePreviewLogo();
+            showToast('🔄 Padrões Restaurados!');
+        }
+    }
+
+    async function adicionarFrase() {
+      const ref = getEmpresaRef();
+      const txt = document.getElementById('novaFrase').value.trim();
+      if (!txt) return;
+      const configRef = ref.collection('config').doc('frases');
+      const doc = await configRef.get();
+      const arr = doc.exists ? (doc.data().frasesRodape || []) : [];
+      arr.push(txt);
+      await configRef.set({ frasesRodape: arr }, { merge: true });
+      document.getElementById('novaFrase').value = '';
+      listarFrases();
+    }
+
+    async function listarFrases() {
+      const ref = getEmpresaRef();
+      const doc = await ref.collection('config').doc('frases').get();
+      const arr = doc.exists ? (doc.data().frasesRodape || []) : [];
+      const list = document.getElementById('fraseList');
+      list.innerHTML = '';
+      arr.forEach((f, i) => {
+        const item = document.createElement('div');
+        item.style = "background:#f9fafb; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px; border:1px solid #eee";
+        item.innerHTML = `<span>${f}</span><button onclick="removerFrase(${i})" style="border:none;background:none;cursor:pointer;color:red">✕</button>`;
+        list.appendChild(item);
+      });
+    }
+
+    async function removerFrase(index) {
+      const ref = getEmpresaRef();
+      const doc = await ref.collection('config').doc('frases').get();
+      const arr = doc.data().frasesRodape;
+      arr.splice(index, 1);
+      await ref.collection('config').doc('frases').set({ frasesRodape: arr }, { merge: true });
+      listarFrases();
+    }
+
+    function updatePreviewLogo() {
+      const url = document.getElementById('cfgLogo').value.trim();
+      document.getElementById('nav-logo').src = url || CORES_PADRAO.logoUrl;
+    }
+  </script>
+</body>
+</html>

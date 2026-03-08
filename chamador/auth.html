@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Login | Smart Mídia On</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+         :root {
+            --primary: #0b63a5;
+            --primary-hover: #084d82;
+            --accent: #144a86;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
+            --glass: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .login-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 460px;
+            padding: 20px;
+            animation: fadeInScale 0.5s ease-out forwards;
+        }
+        
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .login-box {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 3.5rem 3rem;
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .system-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f1f5f9;
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 1.5rem;
+        }
+        
+        h2 {
+            margin: 0;
+            font-size: 2rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-top: 8px;
+        }
+        
+        .input-group {
+            text-align: left;
+            margin-bottom: 1.2rem;
+        }
+        
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: block;
+            margin-bottom: 6px;
+            margin-left: 4px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 13px 16px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            outline: none;
+            font-size: 1rem;
+            background: white;
+        }
+        
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(11, 99, 165, 0.1);
+        }
+        
+        .btn-main {
+            width: 100%;
+            padding: 15px;
+            border: 0;
+            border-radius: 12px;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .btn-main:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+        
+        .modal-card {
+            background: white;
+            padding: 2.5rem 2.5rem;
+            border-radius: 28px;
+            max-width: 480px;
+            width: 92%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 1.2rem;
+        }
+        
+        .whatsapp-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #25D366;
+            color: white;
+            text-decoration: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            margin-top: 15px;
+        }
+        
+        .secondary-btn {
+            background: transparent;
+            color: var(--primary);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .secondary-btn:hover {
+            text-decoration: underline;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.4);
+            text-align: center;
+        }
+        
+        .status-msg {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            min-height: 18px;
+        }
+        
+        .error {
+            color: var(--danger);
+            font-weight: 600;
+        }
+        
+        .loading-spinner {
+            display: none;
+            margin: 15px auto;
+            width: 28px;
+            height: 28px;
+            border: 3px solid rgba(11, 99, 165, 0.2);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="logo-area">
+                <div class="system-badge">🎟️ Chamador de Senhas</div>
+                <h2>Smart Mídia On</h2>
+                <p class="subtitle">Gestão de Atendimento Indoor</p>
+            </div>
+
+            <div class="input-group">
+                <label>E-mail corporativo</label>
+                <input id="email" type="email" placeholder="nome@empresa.com" />
+            </div>
+
+            <div class="input-group">
+                <label>Senha de acesso</label>
+                <input id="password" type="password" placeholder="••••••••" />
+            </div>
+
+            <button id="btnLogin" class="btn-main" onclick="login()">Entrar no Sistema</button>
+
+            <div class="loading-spinner" id="loader"></div>
+            <div id="errorMsg" class="status-msg error"></div>
+
+            <button class="secondary-btn" onclick="openRegisterModal()">Solicitar novo acesso</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalRegister">
+        <div class="modal-card" style="text-align: left;">
+            <h3 style="margin-top:0; color: var(--accent); font-size: 1.6rem;">Criar Nova Conta</h3>
+            <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-muted);">Informe seus dados para análise de ativação.</p>
+
+            <div class="input-group">
+                <label>Nome Completo / Empresa</label>
+                <input id="regNome" type="text" placeholder="Ex: João Silva ou Nome da Loja" />
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="input-group">
+                    <label>WhatsApp / Tel</label>
+                    <input id="regTel" type="tel" placeholder="(00) 00000-0000" />
+                </div>
+                <div class="input-group">
+                    <label>Cidade / UF</label>
+                    <input id="regCidade" type="text" placeholder="Ex: São Paulo - SP" />
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>E-mail de Cadastro</label>
+                <input id="regEmail" type="email" placeholder="seu@email.com" />
+            </div>
+
+            <div class="input-group">
+                <label>Defina uma Senha (mín. 6 dígitos)</label>
+                <input id="regPass" type="password" placeholder="••••••••" />
+            </div>
+
+            <button class="btn-main" onclick="processRegister()">Finalizar e Solicitar Ativação</button>
+            <button class="secondary-btn" style="width:100%;" onclick="closeRegisterModal()">Voltar para o Login</button>
+            <div id="regError" class="status-msg error" style="text-align: center;"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalStatus">
+        <div class="modal-card">
+            <div class="modal-icon" id="statusIcon">⏳</div>
+            <h3 id="statusTitle">Solicitação Recebida</h3>
+            <p id="statusTxt">Seu acesso está em fase de validação.</p>
+
+            <a id="whatsappLink" href="https://wa.me/5500000000000?text=Olá! Preciso de ajuda com minha conta no Smart Mídia." class="whatsapp-btn" target="_blank">
+        Contatar Suporte (WhatsApp)
+      </a>
+            <button class="secondary-btn" onclick="location.reload()">Ir para o Login</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        Versão 1.1.0 • © 2026 Smart Mídia On <br> Todos os direitos reservados.
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZctgUfiY8t7FNz0XFBw-ha7coircJCsw",
+            authDomain: "chamadorapp.firebaseapp.com",
+            projectId: "chamadorapp",
+            storageBucket: "chamadorapp.firebasestorage.app",
+            messagingSenderId: "149731696019",
+            appId: "1:149731696019:web:ac9cd8c5f4bb1707081c66",
+            measurementId: "G-ZPHB6H4W4D"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const openRegisterModal = () => document.getElementById('modalRegister').style.display = 'flex';
+        const closeRegisterModal = () => document.getElementById('modalRegister').style.display = 'none';
+
+        const showStatusModal = (title, text, icon) => {
+            document.getElementById('statusTitle').innerText = title;
+            document.getElementById('statusTxt').innerText = text;
+            document.getElementById('statusIcon').innerText = icon;
+            document.getElementById('modalRegister').style.display = 'none';
+            document.getElementById('modalStatus').style.display = 'flex';
+        };
+
+        async function login() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const loader = document.getElementById('loader');
+            const btn = document.getElementById('btnLogin');
+
+            if (!email || !password) {
+                document.getElementById('errorMsg').textContent = 'Preencha todos os campos.';
+                return;
+            }
+
+            loader.style.display = 'block';
+            btn.style.display = 'none';
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                const doc = await db.collection('empresa').doc(user.uid).get();
+
+                if (doc.exists) {
+                    const userData = doc.data();
+                    if (userData.status === true) {
+                        await db.collection('empresa').doc(user.uid).update({
+                            ultimoLogin: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        window.location.href = "index.html";
+                    } else {
+                        await auth.signOut();
+                        // Aviso genérico para conta inativa ou falta de pagamento
+                        showStatusModal(
+                            "Conta Inativa",
+                            "Seu acesso está inativo ou pendente de ativação. Por gentileza, contate o suporte para regularizar.",
+                            "⚠️"
+                        );
+                    }
+                } else {
+                    await auth.signOut();
+                    document.getElementById('errorMsg').textContent = 'Dados empresariais não encontrados.';
+                }
+            } catch (err) {
+                document.getElementById('errorMsg').textContent = 'E-mail ou senha incorretos.';
+            } finally {
+                loader.style.display = 'none';
+                btn.style.display = 'block';
+            }
+        }
+
+        async function processRegister() {
+            const nome = document.getElementById('regNome').value.trim();
+            const tel = document.getElementById('regTel').value.trim();
+            const cidade = document.getElementById('regCidade').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const pass = document.getElementById('regPass').value;
+            const errorDiv = document.getElementById('regError');
+
+            if (!nome || !tel || !cidade || !email || pass.length < 6) {
+                errorDiv.textContent = "Preencha todos os campos (senha mín. 6 dígitos).";
+                return;
+            }
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
+                const user = userCredential.user;
+
+                await db.collection('empresa').doc(user.uid).set({
+                    nome: nome,
+                    telefone: tel,
+                    cidade: cidade,
+                    email: email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    ultimoLogin: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await db.collection('empresa').doc(user.uid).collection('config').doc('placeholder').set({
+                    init: true
+                });
+                await db.collection('empresa').doc(user.uid).collection('midias').doc('placeholder').set({
+                    init: true
+                });
+
+                await auth.signOut();
+                showStatusModal(
+                    "Sucesso!",
+                    "Sua conta foi criada! Agora nosso suporte fará a ativação técnica. Por gentileza, contate o suporte para acelerar!",
+                    "🚀"
+                );
+            } catch (e) {
+                errorDiv.textContent = "Erro: " + e.message;
+            }
+        }
+    </script>
+</body>
+
+</html>

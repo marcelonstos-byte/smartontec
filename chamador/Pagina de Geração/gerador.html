@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Senha | Smart Mídia On</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        :root { --primary: #2563eb; --bg: #0f172a; --glass-bg: rgba(255, 255, 255, 0.98); }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .container { background: var(--glass-bg); padding: 2rem; border-radius: 24px; width: 100%; max-width: 450px; text-align: center; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        .config-trigger { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.2rem; opacity: 0.4; transition: 0.3s; }
+        .config-trigger:hover { opacity: 1; }
+        .user-badge { display: inline-block; background: #f1f5f9; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: var(--primary); margin-bottom: 1rem; }
+        .grid-botoes { display: grid; gap: 12px; }
+        .botao-senha { background: white; border: 2px solid #e2e8f0; padding: 18px; border-radius: 16px; font-size: 1.1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
+        .botao-senha:hover { transform: translateY(-2px); border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn-A { border-left: 8px solid #2563eb; } .btn-B { border-left: 8px solid #7c3aed; }
+        .btn-C { border-left: 8px solid #059669; } .btn-D { border-left: 8px solid #dc2626; }
+        #modalConfig { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 2rem; border-radius: 15px; width: 90%; max-width: 400px; text-align: left; }
+        .modal-content input { width: 100%; padding: 10px; margin: 8px 0 16px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        .btn-save { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; }
+        #ultimaSenhaGerada { margin-top: 1.5rem; font-weight: 700; color: var(--primary); font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="config-trigger" onclick="abrirConfig()">⚙️</div>
+        <div id="userLabel" class="user-badge">Identificando empresa...</div>
+        <h1 style="margin-bottom: 1.5rem;">Gerar Senha</h1>
+        
+        <div class="grid-botoes">
+            <button class="botao-senha btn-A" onclick="gerarSenha('A')"><span>🎫</span> <span id="txtA">A - Geral</span></button>
+            <button class="botao-senha btn-B" onclick="gerarSenha('B')"><span>💇</span> <span id="txtB">B - Serviço</span></button>
+            <button class="botao-senha btn-C" onclick="gerarSenha('C')"><span>📦</span> <span id="txtC">C - Combo</span></button>
+            <button class="botao-senha btn-D" onclick="gerarSenha('D')"><span>♿</span> <span id="txtD">D - Preferencial</span></button>
+        </div>
+
+        <div id="ultimaSenhaGerada">Última: ---</div>
+    </div>
+
+    <div id="modalConfig">
+        <div class="modal-content">
+            <h3 style="margin-top:0">Configurar Nomes dos Serviços</h3>
+            <label>Serviço A:</label> <input type="text" id="editA">
+            <label>Serviço B:</label> <input type="text" id="editB">
+            <label>Serviço C:</label> <input type="text" id="editC">
+            <label>Serviço D:</label> <input type="text" id="editD">
+            <button class="btn-save" onclick="salvarConfig()">Salvar Nomes</button>
+            <button style="background:none; border:none; color:gray; width:100%; margin-top:15px; cursor:pointer" onclick="fecharConfig()">Voltar</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZctgUfiY8t7FNz0XFBw-ha7coircJCsw",
+            authDomain: "chamadorapp.firebaseapp.com",
+            projectId: "chamadorapp",
+            storageBucket: "chamadorapp.firebasestorage.app",
+            messagingSenderId: "149731696019",
+            appId: "1:149731696019:web:ac9cd8c5f4bb1707081c66"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        let configBotoes = { A: "Geral", B: "Serviço", C: "Combo", D: "Preferencial" };
+        let nomeEmpresa = "Smart On Mídia";
+        let empresaId = "";
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                empresaId = user.uid; 
+                carregarDados();
+            } else {
+                document.getElementById('userLabel').textContent = "⚠️ Faça Login";
+            }
+        });
+
+        async function carregarDados() {
+            try {
+                // 1. Pega o nome da empresa
+                const empDoc = await db.collection("empresa").doc(empresaId).get();
+                if (empDoc.exists) {
+                    nomeEmpresa = empDoc.data().nome || "Empresa";
+                    document.getElementById('userLabel').textContent = nomeEmpresa;
+                }
+
+                // 2. Pega as legendas dos botões na subcoleção 'config'
+                const configDoc = await db.collection("empresa").doc(empresaId)
+                                        .collection("config").doc("botoes").get();
+                if (configDoc.exists) {
+                    configBotoes = configDoc.data();
+                    atualizarUI();
+                }
+            } catch (e) { console.error("Erro ao carregar dados:", e); }
+        }
+
+        function atualizarUI() {
+            document.getElementById('txtA').textContent = `A - ${configBotoes.A}`;
+            document.getElementById('txtB').textContent = `B - ${configBotoes.B}`;
+            document.getElementById('txtC').textContent = `C - ${configBotoes.C}`;
+            document.getElementById('txtD').textContent = `D - ${configBotoes.D}`;
+        }
+
+        function abrirConfig() {
+            document.getElementById('editA').value = configBotoes.A;
+            document.getElementById('editB').value = configBotoes.B;
+            document.getElementById('editC').value = configBotoes.C;
+            document.getElementById('editD').value = configBotoes.D;
+            document.getElementById('modalConfig').style.display = 'flex';
+        }
+
+        function fecharConfig() { document.getElementById('modalConfig').style.display = 'none'; }
+
+        async function salvarConfig() {
+            const novosBotoes = {
+                A: document.getElementById('editA').value,
+                B: document.getElementById('editB').value,
+                C: document.getElementById('editC').value,
+                D: document.getElementById('editD').value
+            };
+            try {
+                // Salva na subcoleção config/botoes conforme estrutura das imagens
+                await db.collection("empresa").doc(empresaId)
+                        .collection("config").doc("botoes").set(novosBotoes);
+                
+                configBotoes = novosBotoes;
+                atualizarUI();
+                fecharConfig();
+                alert("Nomes atualizados!");
+            } catch (e) { alert("Erro ao salvar: " + e.message); }
+        }
+
+        async function gerarSenha(tipo) {
+            if (!empresaId) return;
+            try {
+                const senhasRef = db.collection("empresa").doc(empresaId).collection("senhas");
+                
+                // Busca a última senha para esse tipo específico
+                const snapshot = await senhasRef
+                    .where("tipo", "==", tipo)
+                    .orderBy("numeroSequencial", "desc").limit(1).get();
+
+                let prox = 1;
+                if (!snapshot.empty) {
+                    prox = snapshot.docs[0].data().numeroSequencial + 1;
+                }
+
+                const numero = `${tipo}${prox.toString().padStart(3, '0')}`;
+                
+                await senhasRef.add({
+                    numero, 
+                    tipo, 
+                    numeroSequencial: prox,
+                    status: "aguardando",
+                    horarioChegada: firebase.firestore.Timestamp.now()
+                });
+
+                document.getElementById("ultimaSenhaGerada").innerText = `Última: ${numero}`;
+                imprimir(numero, configBotoes[tipo]);
+            } catch (e) { 
+                console.error(e);
+                alert("Erro ao gerar: " + e.message);
+            }
+        }
+
+        function imprimir(num, serv) {
+            const win = window.open('', '', 'width=300,height=400');
+            win.document.write(`
+                <div style="text-align:center;font-family:sans-serif;padding:20px;">
+                    <h2 style="margin:0">${nomeEmpresa}</h2>
+                    <hr>
+                    <h1 style="font-size:48px;margin:10px 0">${num}</h1>
+                    <p style="font-size:18px;font-weight:bold">${serv}</p>
+                    <small>${new Date().toLocaleString()}</small>
+                </div>
+            `);
+            win.document.close();
+            setTimeout(() => { win.print(); win.close(); }, 500);
+        }
+    </script>
+</body>
+</html>

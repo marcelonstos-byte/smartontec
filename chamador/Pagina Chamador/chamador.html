@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chamador Pro | Smart Mídia On</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #2563eb;
+            --bg: #0f172a;
+            --card-bg: rgba(255, 255, 255, 0.98);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            background-image: radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.15) 0%, transparent 35%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 1.2rem;
+            border-radius: 24px;
+            width: 95%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        .header { margin-bottom: 0.8rem; text-align: center; }
+
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .dot { height: 6px; width: 6px; background: var(--success); border-radius: 50%; }
+
+        h1 { font-size: 1.2rem; color: var(--text-main); margin: 5px 0 0 0; font-weight: 800; }
+
+        .display-area {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            text-align: center;
+        }
+
+        #proximaSenha { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 0; line-height: 1; }
+        
+        .config-section {
+            background: #f1f5f9;
+            padding: 0.8rem;
+            border-radius: 16px;
+            margin-bottom: 0.8rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .config-title {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        label { font-size: 0.65rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 2px; }
+
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-sizing: border-box;
+        }
+
+        .switch-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 18px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 12px; width: 12px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        .mode-label { font-size: 0.65rem; font-weight: 800; color: var(--primary); }
+
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        button {
+            border: none;
+            padding: 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .btn-call { grid-column: span 2; background: var(--primary); color: white; font-size: 1rem; padding: 14px; }
+        .btn-utility { background: #e2e8f0; color: #475569; }
+        .btn-beep { background: var(--warning); color: white; }
+        .btn-finish { background: var(--success); color: white; grid-column: span 2; margin-top: 4px; }
+
+        .disabled-area { opacity: 0.4; pointer-events: none; filter: grayscale(1); }
+        
+        #campoBusca { font-size: 0.8rem; }
+        .search-row { margin-top: 1rem; display: flex; gap: 5px; }
+
+        .extra-input { display: none; margin-top: 5px; border-color: var(--primary); }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div id="userLabel" class="user-badge"><span class="dot"></span> <span>Conectando...</span></div>
+            <h1>Chamador Pro</h1>
+        </div>
+
+        <div class="display-area" id="displayBox">
+            <div style="font-size: 0.6rem; font-weight: 800; color: var(--text-muted);">EM ATENDIMENTO</div>
+            <p id="proximaSenha">---</p>
+            <div id="infoCadeira" style="font-size: 0.75rem; color: var(--text-muted);">Aguardando...</div>
+        </div>
+
+        <div class="config-section">
+            <div class="input-grid">
+                <div>
+                    <label>Local e Nº</label>
+                    <div style="display: flex; gap: 4px;">
+                        <select id="tipoLocal" onchange="toggleExtraInput('tipoLocal', 'outroTipoLocal'); salvarConfigLocal()">
+                            <option value="Guichê">Guichê</option>
+                            <option value="Mesa">Mesa</option>
+                            <option value="Consultório">Consult.</option>
+                            <option value="Sala">Sala</option>
+                            <option value="OUTRO">Outro</option>
+                        </select>
+                        <input type="number" id="numeroLocal" value="1" style="width: 50px;" onchange="salvarConfigLocal()">
+                    </div>
+                    <input type="text" id="outroTipoLocal" class="extra-input" placeholder="Qual?" oninput="salvarConfigLocal()">
+                </div>
+                <div>
+                    <label>Chamar Prefixo</label>
+                    <select id="filtroPrefixo" onchange="salvarConfigLocal()">
+                        <option value="TODOS">Todas (Chegada)</option>
+                        <option value="A">A </option>
+                        <option value="B">B </option>
+                        <option value="C">C </option>
+                        <option value="D">D - Preferencial</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <div class="switch-container">
+                <div class="config-title" style="margin:0">Fluxo Avançado</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="mode-label" id="txtModo">OFF</span>
+                    <label class="switch">
+                        <input type="checkbox" id="modoEncaminhamento" onchange="updateModoView(); salvarConfigLocal()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="containerOpcoesFluxo" class="disabled-area">
+                <div class="input-grid">
+                    <div>
+                        <label>Filtrar Setor (Origem)</label>
+                        <select id="filtroSetor" onchange="salvarConfigLocal()">
+                            <option value="TODOS">Todos</option>
+                            <option value="Triagem">Triagem</option>
+                            <option value="Consultório">Consultório</option>
+                            <option value="Exames">Exames</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Destino ao Finalizar</label>
+                        <select id="setorDestinoPadrao" onchange="toggleExtraInput('setorDestinoPadrao', 'outroSetorDestino'); salvarConfigLocal()">
+                            <option value="ALTA">✅ Encerrar</option>
+                            <option value="Triagem">Triagem</option>
+                            <option value="Consultório">Consultório</option>
+                            <option value="Exames">Exames</option>
+                            <option value="OUTRO">Outro...</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="text" id="outroSetorDestino" class="extra-input" placeholder="Qual setor?" oninput="salvarConfigLocal()">
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-call" onclick="chamarProxima()">CHAMAR PRÓXIMA (Space)</button>
+            <button class="btn-utility" onclick="voltarSenhaAnterior()">RETORNAR</button>
+            <button class="btn-utility" onclick="chamarAtencao()">REPETIR</button>
+            <button class="btn-beep" onclick="apenasBipar()">BIPAR (Shift)</button>
+            <button class="btn-finish" onclick="btnFinalizarClick()">FINALIZAR ATENDIMENTO</button>
+        </div>
+
+        <div class="search-row">
+            <input type="text" id="campoBusca" placeholder="Chamar específica (Ex: A001)">
+            <button class="btn-utility" onclick="pesquisarSenha()" style="padding: 0 15px;">OK</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZctgUfiY8t7FNz0XFBw-ha7coircJCsw",
+            authDomain: "chamadorapp.firebaseapp.com",
+            projectId: "chamadorapp",
+            storageBucket: "chamadorapp.firebasestorage.app",
+            messagingSenderId: "149731696019",
+            appId: "1:149731696019:web:ac9cd8c5f4bb1707081c66"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        let empresaId = "";
+        let ultimaSenhaDocRef = null;
+        let senhaAtualDados = null;
+
+        window.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            if (e.code === 'Space') { e.preventDefault(); chamarProxima(); }
+            if (e.key === 'Shift') { e.preventDefault(); apenasBipar(); }
+        });
+
+        function toggleExtraInput(selectId, inputId) {
+            const select = document.getElementById(selectId);
+            const input = document.getElementById(inputId);
+            input.style.display = select.value === "OUTRO" ? "block" : "none";
+        }
+
+        function updateModoView() {
+            const isEncaminhamento = document.getElementById('modoEncaminhamento').checked;
+            const container = document.getElementById('containerOpcoesFluxo');
+            const txt = document.getElementById('txtModo');
+            if (isEncaminhamento) {
+                container.classList.remove('disabled-area');
+                txt.innerText = "ON";
+            } else {
+                container.classList.add('disabled-area');
+                txt.innerText = "OFF";
+            }
+        }
+
+        window.onload = () => {
+            const salvo = JSON.parse(localStorage.getItem('configChamadorV8'));
+            if(salvo) {
+                document.getElementById('tipoLocal').value = salvo.tipo || "Guichê";
+                document.getElementById('outroTipoLocal').value = salvo.outroTipo || "";
+                document.getElementById('numeroLocal').value = salvo.numero || "1";
+                document.getElementById('setorDestinoPadrao').value = salvo.destino || "ALTA";
+                document.getElementById('outroSetorDestino').value = salvo.outroDestino || "";
+                document.getElementById('modoEncaminhamento').checked = salvo.modoEncaminhamento || false;
+                document.getElementById('filtroSetor').value = salvo.filtroSetor || "TODOS";
+                document.getElementById('filtroPrefixo').value = salvo.filtroPrefixo || "TODOS";
+                toggleExtraInput('tipoLocal', 'outroTipoLocal');
+                toggleExtraInput('setorDestinoPadrao', 'outroSetorDestino');
+                updateModoView();
+            }
+        };
+
+        function salvarConfigLocal() {
+            const config = {
+                tipo: document.getElementById('tipoLocal').value,
+                outroTipo: document.getElementById('outroTipoLocal').value,
+                numero: document.getElementById('numeroLocal').value,
+                destino: document.getElementById('setorDestinoPadrao').value,
+                outroDestino: document.getElementById('outroSetorDestino').value,
+                modoEncaminhamento: document.getElementById('modoEncaminhamento').checked,
+                filtroSetor: document.getElementById('filtroSetor').value,
+                filtroPrefixo: document.getElementById('filtroPrefixo').value
+            };
+            localStorage.setItem('configChamadorV8', JSON.stringify(config));
+            return config;
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                empresaId = user.uid;
+                db.collection("empresa").doc(empresaId).get().then(doc => {
+                    document.querySelector('#userLabel span:last-child').textContent = doc.data()?.nome || "Atendente";
+                });
+            }
+        });
+
+        async function chamarProxima() {
+            if (!empresaId) return;
+            const config = salvarConfigLocal();
+            if (ultimaSenhaDocRef) await btnFinalizarClick();
+
+            try {
+                let query = db.collection("empresa").doc(empresaId).collection("senhas").where("status", "==", "aguardando");
+                if (config.modoEncaminhamento && config.filtroSetor !== "TODOS") query = query.where("setorAtual", "==", config.filtroSetor);
+
+                const snap = await query.orderBy("horarioChegada", "asc").get();
+                let docSelecionado = (config.filtroPrefixo !== "TODOS") ? snap.docs.find(d => d.data().numero.startsWith(config.filtroPrefixo)) : snap.docs[0];
+
+                if (docSelecionado) {
+                    const local = config.tipo === "OUTRO" ? config.outroTipo : config.tipo;
+                    const localCompleto = `${local} ${config.numero}`;
+                    await docSelecionado.ref.update({
+                        status: "chamado",
+                        Cadeira: localCompleto,
+                        horarioAtendimento: firebase.firestore.Timestamp.now(),
+                        reforcarAudio: firebase.firestore.Timestamp.now()
+                    });
+                    ultimaSenhaDocRef = docSelecionado.ref;
+                    senhaAtualDados = docSelecionado.data();
+                    document.getElementById("proximaSenha").innerText = senhaAtualDados.numero;
+                    document.getElementById("infoCadeira").innerText = `Local: ${localCompleto}`;
+                } else { alert("Nenhuma senha aguardando."); }
+            } catch (e) { console.error(e); }
+        }
+
+        async function btnFinalizarClick() {
+            if (!ultimaSenhaDocRef) return;
+            const config = salvarConfigLocal();
+            const destino = config.destino === "OUTRO" ? config.outroDestino : config.destino;
+            try {
+                await ultimaSenhaDocRef.update({ status: "finalizado", horarioFinal: firebase.firestore.Timestamp.now() });
+                if (config.modoEncaminhamento && destino !== "ALTA") {
+                    await db.collection("empresa").doc(empresaId).collection("senhas").add({
+                        numero: senhaAtualDados.numero,
+                        status: "aguardando",
+                        setorAtual: destino,
+                        horarioChegada: firebase.firestore.Timestamp.now(),
+                        origem: `${config.tipo} ${config.numero}`
+                    });
+                }
+                document.getElementById("proximaSenha").innerText = "---";
+                document.getElementById("infoCadeira").innerText = "Aguardando próxima...";
+                ultimaSenhaDocRef = null;
+                senhaAtualDados = null;
+            } catch (e) { console.error(e); }
+        }
+
+        // CORREÇÃO REPETIR: Força o status para um valor neutro e volta para chamado imediatamente
+        async function chamarAtencao() {
+            if (ultimaSenhaDocRef) {
+                // Primeiro mudamos para algo neutro para o painel detectar a VOLTA do status chamado
+                await ultimaSenhaDocRef.update({ status: "reset" });
+                setTimeout(async () => {
+                    await ultimaSenhaDocRef.update({ 
+                        status: "chamado", 
+                        reforcarAudio: firebase.firestore.Timestamp.now() 
+                    });
+                }, 200);
+            }
+        }
+
+        // CORREÇÃO BEEP: O painel precisa de um documento COM STATUS "chamado" ou "bip" para reagir
+// CORREÇÃO BEEP (SHIFT): Agora envia um ID de tempo como string
+async function apenasBipar() {
+    if (!empresaId) return;
+    try {
+        await db.collection("empresa").doc(empresaId).collection("senhas").add({
+            status: "chamado",
+            tipo: "apenas_som",
+            numero: "BIP",
+            horarioAtendimento: firebase.firestore.FieldValue.serverTimestamp(),
+            reforcarAudio: Date.now().toString() // String única para disparar o som
+        });
+    } catch (e) { console.error(e); }
+}
+
+// CORREÇÃO BUSCA:
+async function pesquisarSenha() {
+    const num = document.getElementById("campoBusca").value.trim().toUpperCase();
+    if (!num || !empresaId) return;
+    const config = salvarConfigLocal();
+    
+    const snap = await db.collection("empresa").doc(empresaId).collection("senhas")
+                         .where("numero", "==", num)
+                         .orderBy("horarioChegada", "desc").limit(1).get();
+
+    if (!snap.empty) {
+        const docRef = snap.docs[0].ref;
+        const local = config.tipo === "OUTRO" ? config.outroTipo : config.tipo;
+        const localCompleto = `${local} ${config.numero}`;
+
+        await docRef.update({
+            status: "chamado",
+            Cadeira: localCompleto,
+            horarioAtendimento: firebase.firestore.FieldValue.serverTimestamp(),
+            reforcarAudio: Date.now().toString() // Força o painel a reagir
+        });
+        
+        ultimaSenhaDocRef = docRef;
+        senhaAtualDados = snap.docs[0].data();
+        document.getElementById("proximaSenha").innerText = num;
+        document.getElementById("infoCadeira").innerText = `Local: ${localCompleto}`;
+        document.getElementById("campoBusca").value = "";
+    } else {
+        alert("Senha não encontrada.");
+    }
+}
+
+        async function voltarSenhaAnterior() {
+            if (!ultimaSenhaDocRef) return;
+            await ultimaSenhaDocRef.update({ status: "aguardando", Cadeira: "" });
+            document.getElementById("proximaSenha").innerText = "---";
+            document.getElementById("infoCadeira").innerText = "Retornada à fila";
+            ultimaSenhaDocRef = null;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Painel de Chamadas</title>
+    <style>
+        /* [ESTILOS ORIGINAIS PRESERVADOS] */
+        :root {
+            --cor-primaria: #003a5f;
+            --cor-rodape: #212529;
+            --cor-fundo: #e8f0fe;
+            --cor-numero: #ffcc00;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--cor-fundo);
+            overflow: hidden;
+            transition: background 0.5s ease;
+        }
+
+        #cabecalho {
+            height: 10vh;
+            background: var(--cor-primaria);
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            box-sizing: border-box;
+            transition: background 0.5s ease;
+        }
+
+        #cabecalho img {
+            height: 70%;
+        }
+
+        #main {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            height: 80vh;
+            width: 100vw;
+        }
+
+        #ladoEsquerdo {
+            position: relative;
+            background: black;
+            overflow: hidden;
+            border-right: 5px solid var(--cor-primaria);
+            transition: border-color 0.5s ease;
+        }
+
+        #publicidadeImg,
+        #publicidadeVideo,
+        #publicidadeHtml {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+            background: black;
+            object-fit: contain;
+        }
+
+        #ladoDireito {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            height: 100%;
+        }
+
+        #senhaAtual,
+        #historico {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+
+        #senhaAtual {
+            background: var(--cor-primaria);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 15px;
+            flex: 0 0 auto;
+            transition: background 0.5s ease;
+        }
+
+        #senhaAtualTexto {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        #senhaAtualNumero {
+            font-size: 82px;
+            font-weight: 900;
+            color: var(--cor-numero);
+            animation: pulse 1s infinite alternate;
+            line-height: 1.1;
+            transition: color 0.5s ease;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        #mesaAtual {
+            font-size: 36px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        #historico {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        #historicoTitulo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--cor-primaria);
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 2px solid var(--cor-primaria);
+            padding-bottom: 5px;
+            transition: color 0.5s ease, border-color 0.5s ease;
+        }
+
+        #historicoList {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        #historicoList div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 24px;
+            padding: 12px 10px;
+            border-bottom: 1px dashed #ccc;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        #rodape {
+            height: 10vh;
+            width: 100%;
+            background: var(--cor-rodape);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 60px;
+            box-sizing: border-box;
+            font-size: 22px;
+            letter-spacing: 0.5px;
+            position: relative;
+            transition: background 0.5s ease;
+        }
+
+        #fraseRodape {
+            flex: 1;
+            text-align: left;
+            transition: opacity 0.5s ease;
+        }
+
+        #dataHoraRodape {
+            position: relative;
+            width: 350px;
+            height: 28px;
+            text-align: right;
+        }
+
+        #blocoDataHora,
+        #blocoTemperatura {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 100%;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .fade-in { opacity: 1; z-index: 1; }
+        .fade-out { opacity: 0; z-index: 0; }
+
+        .icon { margin-right: 5px; }
+
+        #carregandoOverlay {
+            position: fixed;
+            inset: 0;
+            background: #0c0c0c;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: #e0e6ed;
+            font-family: "Roboto Mono", "Consolas", monospace;
+            text-align: center;
+            transition: opacity 0.9s ease;
+        }
+
+        #logoCarregando {
+            width: 420px;
+            margin-bottom: 28px;
+            opacity: 0.98;
+        }
+
+        #carregandoTexto {
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        .brilho { animation: brilho 2.2s ease-in-out infinite; }
+        @keyframes brilho {
+            0%, 100% { opacity: 0.75; }
+            50% { opacity: 1; }
+        }
+
+        .pontos { letter-spacing: -8px; }
+        .dot { font-size: 1.4em; opacity: 0; transition: opacity 120ms linear; color: #9fded6; }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+
+<body>
+    <div id="cabecalho">
+        <img id="logoPainel" src="./audio/logo.png" alt="Logo" />
+    </div>
+
+    <div id="main">
+        <div id="ladoEsquerdo">
+            <img id="publicidadeImg" alt="Publicidade" />
+            <video id="publicidadeVideo" muted playsinline></video>
+            <iframe id="publicidadeHtml"></iframe>
+        </div>
+
+        <div id="ladoDireito">
+            <div id="senhaAtual">
+                <div id="senhaAtualTexto">SENHA</div>
+                <div id="senhaAtualNumero">----</div>
+                <div id="mesaAtual">Cadeira --</div>
+            </div>
+            <div id="historico">
+                <div id="historicoTitulo">ÚLTIMAS CHAMADAS</div>
+                <div id="historicoList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="rodape">
+        <div id="fraseRodape">Aguarde sua vez...</div>
+        <div id="dataHoraRodape">
+            <span id="blocoDataHora" class="fade-in">
+                <span class="icon">📅</span><span id="dataAtual"></span> |
+                <span class="icon">⏰</span><span id="horaAtual"></span>
+            </span>
+            <span id="blocoTemperatura" class="fade-out">
+                <span class="icon">🌡️</span><span id="temperaturaLocal">Obtendo clima...</span>
+            </span>
+        </div>
+    </div>
+
+    <audio id="audioChamada" src="./audio/chamada.wav"></audio>
+
+    <div id="carregandoOverlay">
+        <img id="logoCarregando" src="./audio/logo.png" alt="Logo" />
+        <div id="carregandoTexto" class="brilho">
+            <span id="frase">&gt;Iniciando sistema</span>
+            <span class="pontos" id="pontos">
+                <span class="dot" id="dot1">.</span>
+                <span class="dot" id="dot2">.</span>
+                <span class="dot" id="dot3">.</span>
+            </span>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const EMPRESA_ID = urlParams.get('id');
+        const PAINEL_ID = urlParams.get('painel') || "Painel01";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZctgUfiY8t7FNz0XFBw-ha7coircJCsw",
+            authDomain: "chamadorapp.firebaseapp.com",
+            databaseURL: "https://chamadorapp-default-rtdb.firebaseio.com",
+            projectId: "chamadorapp",
+            storageBucket: "chamadorapp.firebasestorage.app",
+            messagingSenderId: "149731696019",
+            appId: "1:149731696019:web:ac9cd8c5f4bb1707081c66"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const database = firebase.database();
+
+        const senhaNumeroEl = document.getElementById("senhaAtualNumero");
+        const mesaEl = document.getElementById("mesaAtual");
+        const historicoListEl = document.getElementById("historicoList");
+        const audioChamada = document.getElementById("audioChamada");
+        const fraseRodapeEl = document.getElementById("fraseRodape");
+
+        let midiasVisuais = [];
+        let frasesRodape = [];
+        let visualIndex = 0;
+        let fraseIndex = 0;
+        let fraseTimer = null;
+        let visualIniciado = false;
+        let proximaMidiaTimeout = null;
+
+        // --- FUNÇÃO DE PRESENÇA (SINAL DE VIDA SEM AUTH) ---
+        function enviarSinalDeVida() {
+            if (!EMPRESA_ID) return;
+            // Usamos o ID da empresa e do painel para criar o caminho no banco
+            database.ref(`presenca/${EMPRESA_ID}/${PAINEL_ID}`).set({
+                lastSeen: firebase.database.ServerValue.TIMESTAMP,
+                status: "online"
+            });
+        }
+
+        function registrarNoBanco(midia) {
+            if (!EMPRESA_ID) return;
+            const log = {
+                empresaId: EMPRESA_ID,
+                terminal: PAINEL_ID,
+                arquivo: midia.nome || midia.url,
+                tipo: midia.tipo || 'imagem',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            database.ref('historicoExibicoes').push(log).catch(e => console.error("Erro ao registrar log:", e));
+        }
+
+        function ouvirCoresPersonalizadas() {
+            if (!EMPRESA_ID) return;
+            db.collection("empresa").doc(EMPRESA_ID).collection("config").doc("visual")
+                .onSnapshot(doc => {
+                    if (doc.exists) {
+                        const dados = doc.data();
+                        const root = document.documentElement;
+                        if (dados.corHeader) root.style.setProperty('--cor-primaria', dados.corHeader);
+                        if (dados.corFooter) root.style.setProperty('--cor-rodape', dados.corFooter);
+                        if (dados.corFundo) root.style.setProperty('--cor-fundo', dados.corFundo);
+                        if (dados.corNumero) root.style.setProperty('--cor-numero', dados.corNumero);
+                        if (dados.logoUrl) {
+                            document.getElementById("logoPainel").src = dados.logoUrl;
+                            document.getElementById("logoCarregando").src = dados.logoUrl;
+                        }
+                    }
+                });
+        }
+
+function iniciarSincronizacao() {
+    if (!EMPRESA_ID) return;
+    
+    const statusRef = database.ref(`statusPainel/${EMPRESA_ID}/${PAINEL_ID}`);
+    statusRef.set({ online: true, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+    statusRef.onDisconnect().set({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+
+    let ultimoTriggerConhecido = null; 
+
+    // REMOVEMOS o .where("status", "==", "chamado") para que as senhas 
+    // continuem aparecendo mesmo após o status mudar para 'atendido'.
+    // Filtramos apenas para garantir que tenham um horário de atendimento.
+    db.collection("empresa").doc(EMPRESA_ID).collection("senhas")
+        .where("horarioAtendimento", "!=", null) 
+        .orderBy("horarioAtendimento", "desc")
+        .limit(6)
+        .onSnapshot(snapshot => {
+            if (snapshot.empty) return;
+
+            const docs = snapshot.docs;
+            
+            // A senha "Atual" (grande) é sempre o primeiro documento da lista (o mais recente)
+            const atualD = docs[0].data();
+            
+            // LÓGICA DE SOM E ATUALIZAÇÃO DO NÚMERO GRANDE
+            const triggerAtual = atualD.reforcarAudio || null;
+
+            if (triggerAtual && triggerAtual !== ultimoTriggerConhecido) {
+                // Só atualiza o destaque principal se não for um BIP silencioso
+                if (atualD.tipo !== "apenas_som") {
+                    senhaNumeroEl.innerText = atualD.numero;
+                    mesaEl.innerText = atualD.Cadeira || "Cadeira --";
+                }
+
+                // Toca o áudio da chamada
+                const audio = document.getElementById("audioChamada");
+                audio.pause();
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("Interação necessária para som"));
+
+                ultimoTriggerConhecido = triggerAtual;
+            }
+
+            // ATUALIZAÇÃO DO HISTÓRICO LATERAL
+            historicoListEl.innerHTML = ""; 
+            
+            docs.forEach((d) => {
+                const dado = d.data();
+                
+                // 1. Não mostramos Bips de som no histórico lateral
+                if (dado.tipo === "apenas_som") return; 
+
+                // 2. Criamos o item do histórico
+                const div = document.createElement("div");
+                div.innerHTML = `
+                    <span>Senha ${dado.numero}</span>
+                    <span style="color:var(--cor-primaria)">${dado.Cadeira || "---"}</span>
+                `;
+                historicoListEl.appendChild(div);
+            });
+        }, error => {
+            console.error("Erro na sincronização:", error);
+        });
+}
+        async function carregarMidiasDoFirestore() {
+            if (!EMPRESA_ID) return;
+            db.collection("empresa").doc(EMPRESA_ID).collection("midias")
+                .where("ativo", "==", true).orderBy("ordem")
+                .onSnapshot(snapshot => {
+                    midiasVisuais = snapshot.docs.map(doc => doc.data());
+                    if (midiasVisuais.length > 0 && !visualIniciado) {
+                        visualIniciado = true;
+                        mostrarProximaMidia();
+                    }
+                });
+
+            db.collection("empresa").doc(EMPRESA_ID).collection("config").doc("frases")
+                .onSnapshot(doc => {
+                    if (doc.exists) {
+                        frasesRodape = doc.data().frasesRodape || [];
+                        if (frasesRodape.length > 0) iniciarCicloFrases();
+                    }
+                });
+        }
+
+        function iniciarCicloFrases() {
+            if (fraseTimer) clearInterval(fraseTimer);
+            const trocarFrase = () => {
+                if (frasesRodape.length === 0) return;
+                fraseRodapeEl.style.opacity = 0;
+                setTimeout(() => {
+                    fraseRodapeEl.innerText = frasesRodape[fraseIndex] || "Bem-vindo!";
+                    fraseRodapeEl.style.opacity = 1;
+                    fraseIndex = (fraseIndex + 1) % frasesRodape.length;
+                }, 500);
+            };
+            trocarFrase();
+            fraseTimer = setInterval(trocarFrase, 12000);
+        }
+
+        function ocultarMidiasComFade(excetoId) {
+            const ids = ["publicidadeImg", "publicidadeVideo", "publicidadeHtml"];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (id !== excetoId) {
+                    el.style.opacity = 0;
+                    setTimeout(() => { 
+                        if (el.style.opacity == 0) {
+                            el.style.display = "none";
+                            if(id === "publicidadeVideo") el.pause();
+                        }
+                    }, 800);
+                }
+            });
+        }
+
+        async function mostrarProximaMidia() {
+            if (midiasVisuais.length === 0) { visualIniciado = false; return; }
+            if (proximaMidiaTimeout) clearTimeout(proximaMidiaTimeout);
+
+            const midia = midiasVisuais[visualIndex];
+            const tipo = (midia.tipo || "").toLowerCase().trim();
+            const videoEl = document.getElementById("publicidadeVideo");
+            const imgEl = document.getElementById("publicidadeImg");
+            const htmlEl = document.getElementById("publicidadeHtml");
+            const tempoMs = (midia.duracao && midia.duracao > 0) ? midia.duracao * 1000 : 15000;
+
+            const proximo = () => {
+                visualIndex = (visualIndex + 1) % midiasVisuais.length;
+                mostrarProximaMidia();
+            };
+
+            registrarNoBanco(midia);
+
+            if (tipo === "video") {
+                videoEl.src = midia.url;
+                videoEl.style.display = "block";
+                videoEl.onloadeddata = () => {
+                    ocultarMidiasComFade("publicidadeVideo");
+                    videoEl.style.opacity = 1;
+                    videoEl.play().catch(proximo);
+                };
+                videoEl.onended = proximo;
+                videoEl.onerror = proximo;
+            } 
+            else if (tipo === "html" || tipo === "link") {
+                htmlEl.src = midia.url;
+                htmlEl.style.display = "block";
+                htmlEl.onload = () => {
+                    ocultarMidiasComFade("publicidadeHtml");
+                    htmlEl.style.opacity = 1;
+                };
+                proximaMidiaTimeout = setTimeout(proximo, tempoMs);
+            }
+            else {
+                imgEl.src = midia.url;
+                imgEl.style.display = "block";
+                imgEl.onload = () => {
+                    ocultarMidiasComFade("publicidadeImg");
+                    imgEl.style.opacity = 1;
+                };
+                imgEl.onerror = proximo;
+                proximaMidiaTimeout = setTimeout(proximo, tempoMs);
+            }
+        }
+
+        setInterval(() => {
+            const agora = new Date();
+            document.getElementById("dataAtual").innerText = agora.toLocaleDateString("pt-BR");
+            document.getElementById("horaAtual").innerText = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        }, 1000);
+
+        (function() {
+            const frases = [
+                { txt: "Iniciando sistema...", time: 1000 },
+                { txt: `Sincronizando ID: ${EMPRESA_ID || 'Não Identificado'}`, time: 1200 },
+                { txt: "Conectando ao Painel...", time: 800 }
+            ];
+            const fraseEl = document.getElementById("frase");
+            const dots = [document.getElementById("dot1"), document.getElementById("dot2"), document.getElementById("dot3")];
+            const overlay = document.getElementById("carregandoOverlay");
+            
+            let dotInterval = setInterval(() => {
+                let step = (parseInt(dots[0].parentElement.getAttribute('data-step') || 0) + 1) % 4;
+                dots[0].parentElement.setAttribute('data-step', step);
+                dots.forEach((d, i) => d.style.opacity = i < step ? "1" : "0");
+            }, 400);
+
+            function processar(i) {
+                if (i >= frases.length) {
+                    clearInterval(dotInterval);
+                    overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        overlay.remove();
+                        
+                        // Inicia sinal de vida e processos
+                        enviarSinalDeVida();
+                        setInterval(enviarSinalDeVida, 30000);
+
+                        iniciarSincronizacao();
+                        ouvirCoresPersonalizadas();
+                        carregarMidiasDoFirestore();
+                    }, 900);
+                    return;
+                }
+                fraseEl.textContent = "> " + frases[i].txt;
+                setTimeout(() => processar(i + 1), frases[i].time);
+            }
+            window.addEventListener("load", () => processar(0));
+        })();
+    </script>
+</body>
+</html>

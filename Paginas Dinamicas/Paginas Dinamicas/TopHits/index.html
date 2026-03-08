@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Top Hits do Momento - Brasil</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      /* Background com imagem */
+      background: 
+        linear-gradient(
+          rgba(0,0,0,0.75),
+          rgba(0,0,0,0.75)
+        ),
+        url("https://img2.wallspic.com/previews/6/7/4/4/3/134476/134476-music-singer-human_voice-cloud-atmosphere-x750.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .card {
+      width: 700px;
+      background: rgba(26, 26, 26, 0.92);
+      border-left: 10px solid #ff9800;
+      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+      backdrop-filter: blur(2px);
+    }
+
+    header {
+      background: linear-gradient(90deg, #00ff6a, #00c853);
+      color: #000;
+      padding: 14px 20px;
+      font-size: 22px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .content {
+      display: flex;
+      align-items: center;
+      padding: 24px;
+      gap: 24px;
+    }
+
+    .rank {
+      font-size: 64px;
+      font-weight: bold;
+      color: #ff9800;
+      width: 80px;
+      text-align: center;
+    }
+
+    .cover {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      box-shadow: 0 0 12px rgba(0,0,0,0.8);
+    }
+
+    .info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    .artist {
+      font-size: 18px;
+      color: #bbb;
+    }
+
+    .footer {
+      padding: 10px 20px;
+      font-size: 12px;
+      color: #888;
+      text-align: right;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <header>🎵 Top Hits do Momento - Brasil</header>
+
+    <div class="content" id="hit">
+      Carregando...
+    </div>
+
+    <div class="footer">Atualizado automaticamente</div>
+  </div>
+
+  <script>
+    function deezerCallback(response) {
+      const container = document.getElementById("hit");
+      container.innerHTML = "";
+
+      const tracks = response.data.slice(0, 10);
+
+      // Sorteia uma música do Top 10
+      const randomIndex = Math.floor(Math.random() * tracks.length);
+      const track = tracks[randomIndex];
+
+      container.innerHTML = `
+        <div class="rank">${randomIndex + 1}</div>
+        <img src="${track.album.cover_medium}" class="cover">
+        <div class="info">
+          <div class="title">${track.title}</div>
+          <div class="artist">${track.artist.name}</div>
+        </div>
+      `;
+    }
+  </script>
+
+  <!-- Deezer JSONP -->
+  <script src="https://api.deezer.com/chart/0/tracks?limit=10&output=jsonp&callback=deezerCallback"></script>
+
+</body>
+</html>

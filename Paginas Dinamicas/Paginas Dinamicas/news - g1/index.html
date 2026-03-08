@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>G1 Mundo | Premium Feed</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@900&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        #feed {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1.2s ease-in-out, opacity 0.8s;
+            display: flex;
+            align-items: flex-end;
+            opacity: 0;
+        }
+        /* Overlay duplo para legibilidade máxima */
+        
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0) 100%), linear-gradient(to right, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 50%);
+            z-index: 5;
+        }
+        
+        .container {
+            position: relative;
+            width: 100%;
+            padding: 0 6% 100px;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        
+        .content-wrap {
+            max-width: 85%;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: #C4170C;
+            color: white;
+            padding: 6px 15px;
+            font-size: 0.85em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(196, 23, 12, 0.3);
+        }
+        
+        .title {
+            font-family: 'Playfair Display', serif;
+            font-size: 4em;
+            line-height: 1.05;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: slideIn 1s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        .line {
+            width: 120px;
+            height: 6px;
+            background: #C4170C;
+            border-radius: 3px;
+        }
+        /* Logo no canto inferior direito */
+        
+        .logo-container {
+            position: absolute;
+            top: 40px;
+            /* Distância do topo */
+            right: 50px;
+            /* Distância da direita */
+            width: 150px;
+            /* Aumentei um pouco para dar mais destaque no topo */
+            z-index: 100;
+            /* Garante que fique acima de tudo */
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+        }
+        
+        .logo-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @media(max-width:768px) {
+            .title {
+                font-size: 2.5em;
+            }
+            .logo-container {
+                width: 80px;
+                bottom: 20px;
+                right: 20px;
+            }
+            .container {
+                padding-bottom: 60px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="feed">
+        <div class="overlay"></div>
+
+        <div class="container">
+            <div class="content-wrap">
+                <span class="badge" id="category">G1 | Mundo</span>
+                <h1 class="title" id="news-title">Carregando as últimas notícias do mundo...</h1>
+                <div class="line"></div>
+            </div>
+        </div>
+
+        <div class="logo-container">
+            <img src=".\img\G1_logo.svg" alt="G1 Logo" onerror="this.style.display='none'">
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var XML_URL = "https://content.scripts.farolsign.com.br/dinamicos/feed/globo/g1/mundo";
+            var PROXY = "https://api.allorigins.win/raw?url=";
+            var FALLBACK_IMAGE = "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?q=80&w=1920&auto=format&fit=crop";
+
+            var feedEl = document.getElementById("feed");
+            var titleEl = document.getElementById("news-title");
+            var categoryEl = document.getElementById("category");
+
+            function loadData() {
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", PROXY + encodeURIComponent(XML_URL), true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        var parser = new DOMParser();
+                        var xmlDoc = parser.parseFromString(xhr.responseText, "text/xml");
+                        var items = xmlDoc.getElementsByTagName("item");
+
+                        if (items.length > 0) {
+                            var item = items[Math.floor(Math.random() * items.length)];
+                            var cTag = item.getElementsByTagName("category")[0];
+                            var dTag = item.getElementsByTagName("description")[0];
+                            var iTag = item.getElementsByTagName("image")[0];
+
+                            render({
+                                category: cTag ? cTag.textContent : "G1 | Mundo",
+                                title: dTag ? dTag.textContent : "",
+                                image: iTag ? iTag.textContent : FALLBACK_IMAGE
+                            });
+                        }
+                    }
+                };
+                xhr.send();
+            }
+
+            function render(data) {
+                var tempImg = new Image();
+                tempImg.src = data.image;
+                tempImg.onload = function() {
+                    feedEl.style.opacity = "0";
+                    setTimeout(function() {
+                        feedEl.style.backgroundImage = "url('" + data.image + "')";
+                        titleEl.textContent = data.title;
+                        categoryEl.textContent = data.category;
+                        feedEl.style.opacity = "1";
+                    }, 600);
+                };
+                tempImg.onerror = function() {
+                    data.image = FALLBACK_IMAGE;
+                    render(data);
+                };
+            }
+
+            loadData();
+            setInterval(loadData, 15000); // Reduzido para 15 segundos para mais dinamismo
+        })();
+    </script>
+
+</body>
+
+</html>

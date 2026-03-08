@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart On Mídia | Digital Signage Inteligente</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --primary: #03517e;
+            --primary-light: #0d84d1;
+            --accent: #16A34A;
+            --bg: #f9fafb;
+            --text-dark: #0f172a;
+            --text-muted: #475569;
+            --text-light: #ffffff;
+            --card-bg: #ffffff;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        a {
+            text-decoration: none;
+        }
+        /* --- HEADER --- */
+        
+        header {
+            width: 100%;
+            padding: 15px 5%;
+            background: rgba(3, 81, 126, 0.98);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        header img.logo {
+            height: 45px;
+        }
+        
+        nav a {
+            color: var(--text-light) !important;
+            margin-left: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+        
+        nav a:hover {
+            opacity: 0.8;
+        }
+        /* --- HERO --- */
+        
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 120px 20px;
+            background: radial-gradient(circle at top right, var(--primary-light), var(--primary));
+            color: var(--text-light);
+        }
+        
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 800;
+            margin-bottom: 24px;
+            max-width: 900px;
+        }
+        /* --- NOVA ÁREA DE ACESSO (UPGRADED) --- */
+        
+        #login-selection {
+            display: none;
+            padding: 100px 5%;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            text-align: center;
+            position: relative;
+        }
+        
+        .login-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .login-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .login-option {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 50px 30px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-option::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--primary-light);
+            opacity: 0;
+            transition: 0.3s;
+        }
+        
+        .login-option:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 30px 60px rgba(3, 81, 126, 0.15);
+            background: #fff;
+        }
+        
+        .login-option:hover::before {
+            opacity: 1;
+        }
+        
+        .login-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .login-option h4 {
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+        
+        .login-option p {
+            color: var(--text-muted);
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .btn-access {
+            background: var(--primary);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-weight: 700;
+            display: inline-block;
+            transition: 0.3s;
+        }
+        
+        .login-option:hover .btn-access {
+            background: var(--accent);
+        }
+        /* --- CARDS SERVIÇOS --- */
+        
+        .services {
+            padding: 80px 5%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: -60px;
+        }
+        
+        .service-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .service-card.selected {
+            border-color: var(--primary-light);
+            background: #eef7ff;
+        }
+        
+        .card-slider {
+            width: 100%;
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+            background: #eee;
+        }
+        
+        .card-slider img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        
+        .card-slider img.active {
+            opacity: 1;
+        }
+        
+        .service-content {
+            padding: 25px;
+        }
+        
+        .service-content h3 {
+            color: var(--primary);
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        /* --- DETALHES --- */
+        
+        #details-container {
+            display: none;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            padding: 100px 10%;
+            margin: 40px 0;
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .details-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+        
+        .details-text h2 {
+            font-size: 36px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+        
+        .btn {
+            background: linear-gradient(to bottom right, var(--accent), #10b981);
+            color: #fff;
+            padding: 16px 36px;
+            border-radius: 50px;
+            font-weight: 700;
+            display: inline-block;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .tv-frame {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.15);
+        }
+        
+        .tv-screen {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .tv-screen img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* --- SEÇÕES EXTRAS --- */
+        
+        .about {
+            display: flex;
+            align-items: center;
+            padding: 100px 10%;
+            gap: 60px;
+        }
+        
+        .about img {
+            flex: 1;
+            max-width: 500px;
+            border-radius: 24px;
+        }
+        
+        .cta {
+            background: var(--primary);
+            color: #fff;
+            text-align: center;
+            padding: 100px 20px;
+        }
+        
+        footer {
+            background: #023a5a;
+            color: #cbd5e1;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: 0.8s;
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 900px) {
+            .details-wrapper {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+            .about {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <img class="logo" src="midiaindoor\Exibidor\audio\logo.png" alt="Smart On Mídia">
+        <nav>
+            <a href="#services">Serviços</a>
+            <a href="#about">Sobre</a>
+            <a href="#cta">Contato</a>
+            <a onclick="toggleLogin()" style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px;">Acesso 🔒</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>Conectando Pessoas com Conteúdo Digital</h1>
+        <p>Soluções inteligentes em Mídia Indoor e Gerenciamento de Telas.</p>
+        <div style="display: flex; gap: 15px; margin-top: 30px;">
+            <a href="#services" class="btn" style="background: transparent; border: 2px solid white;">Conhecer Soluções</a>
+            <a onclick="toggleLogin()" class="btn">Área do Cliente</a>
+        </div>
+    </section>
+
+    <section id="login-selection">
+        <div class="login-container">
+            <span style="text-transform: uppercase; letter-spacing: 2px; font-weight: 800; color: var(--primary-light);">Painel de Controle</span>
+            <h2 style="font-size: 42px; margin-top: 10px;">O que vamos gerenciar hoje?</h2>
+
+            <div class="login-grid">
+                <div class="login-option reveal" onclick="location.href='midiaindoor/login.html'">
+                    <span class="login-icon">🖥️</span>
+                    <h4>Mídia Indoor</h4>
+                    <p>Acesse o CMS para atualizar playlists, verificar status das telas e agendar campanhas em tempo real.</p>
+                    <span class="btn-access">Entrar no Sistema</span>
+                </div>
+
+                <div class="login-option reveal" onclick="location.href='chamador/auth.html'">
+                    <span class="login-icon">🎟️</span>
+                    <h4>Chamador de Senhas</h4>
+                    <p>Gestão de filas e atendimento. Configure guichês, prioridades e visualize estatísticas de espera.</p>
+                    <span class="btn-access">Acessar Painel</span>
+                </div>
+            </div>
+
+            <p style="margin-top: 50px; color: var(--text-muted);">Esqueceu sua senha? <a href="#cta" style="color: var(--primary); font-weight: 700;">Fale com o suporte.</a></p>
+        </div>
+    </section>
+
+    <section class="services" id="services">
+        <div class="service-card reveal" onclick="showDetails('divulgacao', this)">
+            <div class="card-slider" data-interval="3000">
+                <img src="https://www.yeloo.com.br/wp-content/uploads/2025/10/ARTIGO-4.png" class="active">
+                <img src="https://kxmidia.com.br/images/midiaindoor2.jpg">
+            </div>
+            <div class="service-content">
+                <h3>Divulgação em nossas telas</h3>
+                <p>Anuncie sua marca em nossa rede estratégica. Visibilidade máxima para o seu negócio.</p>
+            </div>
+        </div>
+
+        <div class="service-card reveal" onclick="showDetails('institucional', this)">
+            <div class="card-slider" data-interval="3500">
+                <img src="https://pluss360.com.br/wp-content/uploads/2025/04/3591_anuncie-tv-indoor-sao-mateus-es.jpg" class="active">
+                <img src="https://www.tvcorporativa.com.br/img/tv-corporativa-template.png">
+                <img src="https://s2-valor-investe.glbimg.com/ZE01aVNMRLaY8esJntHafJy-PSM=/30x0:1280x1144/924x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_f035dd6fd91c438fa04ab718d608bbaa/internal_photos/bs/2019/Z/y/126GSnQhe9tQq3i3a0Kg/chiquinho-sorvetes-unidade-shopping-metro-santa-cruz.jpg">
+            </div>
+            <div class="service-content">
+                <h3>Mídia Indoor Institucional</h3>
+                <p>Mostre o que há de melhor para seus clientes e colaboradores através de Menus Digitais e TVs Corporativas.</p>
+            </div>
+        </div>
+
+        <div class="service-card reveal" onclick="showDetails('sistema', this)">
+            <div class="card-slider" data-interval="4000">
+                <img src="https://pixmidia.com.br/wp-content/uploads/2024/04/gestao-remota-new@2x.png.webp" class="active">
+                <img src="https://midiaindoor.tv.br/wp-content/uploads/2019/05/funcionamento-do-sistema-2.gif">
+            </div>
+            <div class="service-content">
+                <h3>Sistema de Gerenciamento</h3>
+                <p>Controle remoto total da sua rede de mídia indoor. Gerencie conteúdos de qualquer lugar.</p>
+            </div>
+        </div>
+
+        <div class="service-card reveal" onclick="showDetails('senhas', this)">
+            <div class="card-slider" data-interval="4500">
+                <img src="https://birdserv.com.br/wp-content/uploads/2020/08/painel-de-senhas-1.jpeg" class="active">
+                <img src="https://sistemasdesenha.com.br/wp-content/uploads/2025/05/PAINEL-DE-SENHA-hero.webp">
+            </div>
+            <div class="service-content">
+                <h3>Chamador de Senhas</h3>
+                <p>Organize suas filas com um sistema visual moderno integrado às suas telas.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="details-container">
+        <div class="details-wrapper" id="detailsContent">
+            <div class="details-text">
+                <h2 id="det-title">Título do Serviço</h2>
+                <p id="det-desc">Descrição comercial detalhada...</p>
+                <a href="#cta" class="btn">Solicitar Orçamento</a>
+            </div>
+            <div class="details-visual">
+                <div class="tv-frame">
+                    <div class="tv-screen">
+                        <img id="det-img" src="" alt="Demo">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="about" id="about">
+        <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1000&auto=format&fit=crop" class="reveal">
+        <div class="about-text reveal">
+            <h2>Líderes em Digital Signage</h2>
+            <p>A <strong>Smart On Mídia</strong> transforma ambientes através de telas inteligentes.</p>
+        </div>
+    </section>
+
+    <section class="cta" id="cta">
+        <div class="reveal">
+            <h2>Pronto para o próximo nível?</h2>
+            <a href="https://wa.me/seunumeroaqui" class="btn" style="margin-top: 20px;">Falar no WhatsApp</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Smart On Mídia. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        const serviceData = {
+            divulgacao: {
+                title: "Divulgação em Nossa Rede",
+                desc: "Impacte milhares de pessoas diariamente em locais de alto consumo. Nossa rede de telas está presente em academias, clínicas e supermercados.",
+                img: "https://www.yeloo.com.br/wp-content/uploads/2025/10/ARTIGO-4.png"
+            },
+            institucional: {
+                title: "Mídia Indoor Corporativa e Menus",
+                desc: "Transforme o ambiente da sua empresa com tecnologia de ponta. Mostre o que há de melhor através de Menus Digitais.",
+                img: "https://pluss360.com.br/wp-content/uploads/2025/04/3591_anuncie-tv-indoor-sao-mateus-es.jpg"
+            },
+            sistema: {
+                title: "Sistema de Gerenciamento Cloud",
+                desc: "Gerencie uma ou cem telas com a mesma facilidade. Nosso sistema permite programar playlists e monitorar status em tempo real.",
+                img: "https://pixmidia.com.br/wp-content/uploads/2024/04/gestao-remota-new@2x.png.webp"
+            },
+            senhas: {
+                title: "Chamador de Senhas Personalizado",
+                desc: "Transforme a espera em entretenimento. Nosso sistema de senhas visual reduz a ansiedade do cliente.",
+                img: "https://sistemasdesenha.com.br/wp-content/uploads/2025/05/PAINEL-DE-SENHA-hero.webp"
+            }
+        };
+
+        function toggleLogin() {
+            const loginSec = document.getElementById('login-selection');
+            if (loginSec.style.display === 'block') {
+                loginSec.style.display = 'none';
+            } else {
+                loginSec.style.display = 'block';
+                // Garante que o scroll aconteça após o display block
+                setTimeout(() => {
+                    loginSec.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 10);
+            }
+        }
+
+        function showDetails(key, cardElement) {
+            const container = document.getElementById('details-container');
+            const content = document.getElementById('detailsContent');
+            const data = serviceData[key];
+
+            document.getElementById('det-title').innerText = data.title;
+            document.getElementById('det-desc').innerText = data.desc;
+            document.getElementById('det-img').src = data.img;
+
+            document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+            cardElement.classList.add('selected');
+
+            container.style.display = 'block';
+            content.classList.remove('fade-in-up');
+            void content.offsetWidth;
+            content.classList.add('fade-in-up');
+
+            setTimeout(() => {
+                container.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 100);
+        }
+
+        function startCardSliders() {
+            document.querySelectorAll('.card-slider').forEach(slider => {
+                const images = slider.querySelectorAll('img');
+                if (images.length <= 1) return;
+                let idx = 0;
+                setInterval(() => {
+                    images[idx].classList.remove('active');
+                    idx = (idx + 1) % images.length;
+                    images[idx].classList.add('active');
+                }, parseInt(slider.getAttribute('data-interval')) || 3000);
+            });
+        }
+
+        function reveal() {
+            document.querySelectorAll(".reveal").forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 100) el.classList.add("active");
+            });
+        }
+
+        window.addEventListener("scroll", reveal);
+        window.addEventListener("load", () => {
+            reveal();
+            startCardSliders();
+        });
+    </script>
+</body>
+
+
+</html>

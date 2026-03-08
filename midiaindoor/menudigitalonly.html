@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Indoor Pro - V6.0 Full Array Sync</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --primary: #e63946;
+            --gold: #ffb703;
+            --accent: #00b4ff;
+            --dark: #0a0a0a;
+            --panel-w: 380px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        #main-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        #stage {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #master-screen {
+            position: relative;
+        }
+        
+        #viewport {
+            width: 1920px;
+            height: 1080px;
+            background-color: #111;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 100px rgba(0, 0, 0, 0.5);
+        }
+        
+        #dark-overlay {
+            position: absolute;
+            inset: 0;
+            background: #000;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.4;
+        }
+        
+        .element {
+            position: absolute;
+            z-index: 10;
+            cursor: default;
+            user-select: none;
+            will-change: transform;
+        }
+        
+        .editor-active .element {
+            cursor: move;
+            outline: 2px dashed rgba(255, 255, 255, 0.3);
+            outline-offset: 5px;
+        }
+        
+        .txt {
+            font-weight: 900;
+            text-transform: uppercase;
+            line-height: 1.1;
+            white-space: nowrap;
+        }
+        
+        .element img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .anim-fade-in {
+            animation: fadeIn 1s ease forwards;
+        }
+        
+        .anim-slide-up {
+            animation: slideUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        .anim-zoom-in {
+            animation: zoomIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translate(var(--tx), calc(var(--ty) + 100px));
+            }
+            to {
+                opacity: 1;
+                transform: translate(var(--tx), var(--ty));
+            }
+        }
+        
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: translate(var(--tx), var(--ty)) scale(1);
+            }
+        }
+        
+        #editor-panel {
+            width: var(--panel-w);
+            background: var(--dark);
+            border-left: 2px solid #222;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 20px;
+            z-index: 1000;
+        }
+        
+        body.editor-active #editor-panel {
+            display: flex;
+        }
+        
+        .section {
+            background: #151515;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #222;
+        }
+        
+        h3 {
+            font-size: 11px;
+            color: var(--gold);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        
+        label {
+            font-size: 10px;
+            color: #777;
+            display: block;
+            margin-top: 8px;
+        }
+        
+        input,
+        select {
+            width: 100%;
+            background: #000;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 4px;
+            font-size: 12px;
+        }
+        
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: 0.3s;
+        }
+        
+        .btn-save {
+            background: #3498db;
+            color: white;
+            margin-top: 15px;
+        }
+        
+        .btn-publish {
+            background: #2ecc71;
+            color: white;
+            margin-top: 5px;
+        }
+        
+        .btn-outline {
+            background: #222;
+            color: #ccc;
+            font-size: 11px;
+        }
+        
+        #config-trigger {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2000;
+        }
+        
+        #status-bar {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: var(--accent);
+            z-index: 3000;
+            border: 1px solid #222;
+        }
+        
+        .info-box {
+            font-size: 10px;
+            color: #aaa;
+            line-height: 1.4;
+        }
+        
+        .info-box span {
+            color: var(--accent);
+            word-break: break-all;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="status-bar">Sincronizando...</div>
+    <div id="config-trigger" onclick="handleAuthToggle()">⚙️</div>
+
+    <div id="main-container">
+        <div id="stage">
+            <div id="master-screen">
+                <div id="viewport">
+                    <div id="dark-overlay"></div>
+                    <div id="el-logo" class="element" data-key="pos_logo"><img id="v-logo"></div>
+                    <div id="el-prod" class="element" data-key="pos_prod"><img id="v-prod"></div>
+                    <div id="el-title" class="element" data-key="pos_title">
+                        <div id="v-title" class="txt">Produto</div>
+                    </div>
+                    <div id="el-desc" class="element" data-key="pos_desc">
+                        <div id="v-desc" class="txt" style="font-weight:400; text-transform:none;">Descrição</div>
+                    </div>
+                    <div id="el-price" class="element" data-key="pos_price">
+                        <div id="v-price" class="txt">R$ 0,00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <aside id="editor-panel">
+            <h2 style="font-size: 16px; margin-bottom: 5px;">Smart Indoor <span style="color:var(--primary)">PRO V6</span></h2>
+
+            <div class="section" style="background: #000; border-color: #333;">
+                <h3>Identificação do Sistema</h3>
+                <div class="info-box">
+                    Conta: <span id="info-user">---</span><br> ID: <span id="info-id">---</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Layout e Orientação</h3>
+                <label>Orientação da Tela</label>
+                <select id="in-orientation" onchange="updateLive('orientation', this.value)">
+                    <option value="horizontal">Horizontal (1920x1080)</option>
+                    <option value="vertical">Vertical (1080x1920)</option>
+                </select>
+                <label>Intensidade do Filtro Escuro</label>
+                <input type="range" min="0" max="1" step="0.1" id="in-dark" oninput="updateLive('dark_intensity', parseFloat(this.value))">
+            </div>
+
+            <div class="section">
+                <h3>Navegação Slides</h3>
+                <div class="row">
+                    <button class="btn btn-outline" onclick="changeSlide(-1)">◀</button>
+                    <span id="slide-index" style="font-size:12px; min-width:40px; text-align:center;">1 / 1</span>
+                    <button class="btn btn-outline" onclick="changeSlide(1)">▶</button>
+                </div>
+                <button class="btn btn-outline" style="background:var(--accent); color:black;" onclick="cloneSlide()">+ Clonar Slide</button>
+            </div>
+
+            <div class="section">
+                <h3>Configurações do Slide</h3>
+                <label>Duração (segundos)</label>
+                <input type="number" id="in-duracao" oninput="updateLive('duracao', parseInt(this.value))">
+                <label>Animação</label>
+                <select id="in-anim" onchange="updateLive('anim_type', this.value)">
+                    <option value="anim-fade-in">Fade-in</option>
+                    <option value="anim-slide-up">Slide Up</option>
+                    <option value="anim-zoom-in">Zoom In</option>
+                </select>
+            </div>
+
+            <div class="section">
+                <h3>Textos</h3>
+                <label>Título (Nome)</label>
+                <input type="text" id="in-title" oninput="updateLive('nome', this.value)">
+                <div class="row">
+                    <input type="color" id="in-color-t" oninput="updateLive('color_t', this.value)">
+                    <input type="range" min="20" max="300" id="in-size-t" oninput="updateLive('size_t', parseInt(this.value))">
+                </div>
+                <label>Descrição</label>
+                <input type="text" id="in-desc" oninput="updateLive('descricao', this.value)">
+                <div class="row">
+                    <input type="color" id="in-color-d" oninput="updateLive('color_d', this.value)">
+                    <input type="range" min="10" max="200" id="in-size-d" oninput="updateLive('size_d', parseInt(this.value))">
+                </div>
+                <label>Preço</label>
+                <input type="text" id="in-price" oninput="updateLive('preco', this.value)">
+                <div class="row">
+                    <input type="color" id="in-color-p" oninput="updateLive('color_p', this.value)">
+                    <input type="range" min="20" max="350" id="in-size-p" oninput="updateLive('size_p', parseInt(this.value))">
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Mídias e Tamanhos</h3>
+                <label>URL Imagem Produto</label>
+                <input type="text" id="in-img" oninput="updateLive('url', this.value)">
+                <label>Tamanho Produto</label>
+                <input type="range" min="50" max="1500" id="in-w-prod" oninput="updateLive('w_prod', parseInt(this.value))">
+                <label>URL Logo</label>
+                <input type="text" id="in-logo" oninput="updateLive('logo_url', this.value)">
+                <label>Tamanho Logo</label>
+                <input type="range" min="20" max="800" id="in-w-logo" oninput="updateLive('w_logo', parseInt(this.value))">
+                <label>URL Background</label>
+                <input type="text" id="in-bg" oninput="updateLive('bg', this.value)">
+            </div>
+
+            <button class="btn btn-save" onclick="salvarRascunho()">💾 SALVAR EDIÇÕES</button>
+            <button class="btn btn-publish" onclick="publicarNaPlaylist()">🚀 PUBLICAR NA PLAYLIST</button>
+            <button class="btn btn-outline" onclick="deleteCurrentSlide()" style="color: var(--primary); margin-top: 15px;">Excluir Slide</button>
+            <button class="btn btn-outline" onclick="logout()" style="margin-top: 10px; opacity: 0.5;">Sair</button>
+        </aside>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDiTbWSlcKpsPEtEzPkSU0jHZkfcAg5fNU",
+            authDomain: "newsmartonapp.firebaseapp.com",
+            projectId: "newsmartonapp",
+            storageBucket: "newsmartonapp.firebasestorage.app",
+            messagingSenderId: "1096968028299",
+            appId: "1:1096968028299:web:f3a9e48db108afbbb7548e"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // CORREÇÃO: Captura priorizando sempre a URL para evitar dados do ID antigo
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentId = urlParams.get('id') || urlParams.get('device');
+
+        if (currentId) {
+            localStorage.setItem('lastId', currentId);
+        }
+
+        let state = {
+            slides: [],
+            current: 0,
+            isEditor: false,
+            scale: 1,
+            ownerUid: '',
+            deviceId: currentId || localStorage.getItem('lastId'),
+            timer: null,
+            snapshotUnsubscribe: null
+        };
+
+        const ADMIN_ID = "DrzBYJWuNAOoAIRGWfrsKdVFhYr2";
+
+        if (state.deviceId) {
+            init();
+        } else {
+            document.getElementById('status-bar').innerText = "Erro: ID Ausente";
+        }
+
+        async function init() {
+            document.getElementById('info-id').innerText = state.deviceId;
+
+            try {
+                // Busca o dispositivo em qualquer conta
+                const snap = await db.collectionGroup('dispositivos').get();
+                const deviceDoc = snap.docs.find(d => d.id === state.deviceId);
+
+                if (deviceDoc) {
+                    state.ownerUid = deviceDoc.ref.parent.parent.id;
+                    const path = `usuarios/${state.ownerUid}/dispositivos/${state.deviceId}/MenuOnly/data`;
+                    const docRef = db.doc(path);
+
+                    // Limpa listener antigo se houver
+                    if (state.snapshotUnsubscribe) state.snapshotUnsubscribe();
+
+                    state.snapshotUnsubscribe = docRef.onSnapshot(doc => {
+                        if (doc.exists) {
+                            const data = doc.data();
+                            state.slides = data.slides || [getDefaultTemplate()];
+                            render();
+                            if (!state.isEditor) startPlayer();
+                        } else {
+                            // Se não existir, cria o documento inicial
+                            const initial = {
+                                slides: [getDefaultTemplate()],
+                                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                            };
+                            docRef.set(initial);
+                        }
+                    });
+                } else {
+                    alert("ID não encontrado no banco de dados.");
+                }
+            } catch (error) {
+                console.error("Erro no init:", error);
+            }
+        }
+
+        function getDefaultTemplate() {
+            return {
+                nome: "NOVO PRODUTO",
+                orientation: "horizontal",
+                color_t: "#ffffff",
+                size_t: 100,
+                descricao: "Descrição do item",
+                color_d: "#cccccc",
+                size_d: 40,
+                preco: "19,90",
+                color_p: "#ffb703",
+                size_p: 120,
+                url: "",
+                w_prod: 700,
+                logo_url: "",
+                w_logo: 200,
+                bg: "",
+                dark_intensity: 0.4,
+                anim_type: "anim-fade-in",
+                duracao: 8,
+                pos_title: {
+                    x: 100,
+                    y: 150
+                },
+                pos_desc: {
+                    x: 100,
+                    y: 300
+                },
+                pos_price: {
+                    x: 100,
+                    y: 550
+                },
+                pos_prod: {
+                    x: 1000,
+                    y: 100
+                },
+                pos_logo: {
+                    x: 50,
+                    y: 50
+                }
+            };
+        }
+
+        function render() {
+            const s = state.slides[state.current];
+            if (!s) return;
+
+            const vp = document.getElementById('viewport');
+            vp.style.width = s.orientation === "vertical" ? "1080px" : "1920px";
+            vp.style.height = s.orientation === "vertical" ? "1920px" : "1080px";
+            vp.style.backgroundImage = s.bg ? `url('${s.bg}')` : 'none';
+            document.getElementById('dark-overlay').style.opacity = s.dark_intensity;
+
+            const mapText = (id, text, color, size) => {
+                const el = document.getElementById(id);
+                el.innerText = text;
+                el.style.color = color;
+                el.style.fontSize = size + "px";
+            };
+
+            mapText('v-title', s.nome, s.color_t, s.size_t);
+            mapText('v-desc', s.descricao, s.color_d, s.size_d);
+            mapText('v-price', "R$ " + s.preco, s.color_p, s.size_p);
+
+            const imgProd = document.getElementById('v-prod');
+            imgProd.src = s.url || '';
+            imgProd.parentElement.style.width = (s.w_prod || 700) + "px";
+
+            const imgLogo = document.getElementById('v-logo');
+            imgLogo.src = s.logo_url || '';
+            imgLogo.parentElement.style.width = (s.w_logo || 200) + "px";
+
+            Object.keys(s).forEach(key => {
+                if (key.startsWith('pos_')) {
+                    const el = document.getElementById(key.replace('pos_', 'el-'));
+                    if (el) {
+                        el.style.setProperty('--tx', `${s[key].x}px`);
+                        el.style.setProperty('--ty', `${s[key].y}px`);
+                        el.style.transform = `translate(${s[key].x}px, ${s[key].y}px)`;
+
+                        if (!state.isEditor) {
+                            el.classList.remove('anim-fade-in', 'anim-slide-up', 'anim-zoom-in');
+                            void el.offsetWidth;
+                            el.classList.add(s.anim_type || 'anim-fade-in');
+                        }
+                    }
+                }
+            });
+
+            if (state.isEditor) syncPanelInputs();
+            setTimeout(applyScaling, 10);
+            document.getElementById('status-bar').innerText = "Sincronizado";
+        }
+
+        async function salvarRascunho() {
+            if (!state.ownerUid) return;
+            try {
+                await db.doc(`usuarios/${state.ownerUid}/dispositivos/${state.deviceId}/MenuOnly/data`).set({
+                    slides: state.slides,
+                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert("✅ Design salvo!");
+            } catch (e) {
+                alert("Erro ao salvar: " + e.message);
+            }
+        }
+
+        async function publicarNaPlaylist() {
+            if (!state.ownerUid) return;
+            const slideAtual = state.slides[state.current];
+            const finalUrl = `https://marcelonstos-byte.github.io/menudigital?id=${state.deviceId}`;
+            const duracaoTotal = state.slides.reduce((total, slide) => total + (parseInt(slide.duracao) || 8), 0);
+
+            const novaMidia = {
+                nome: slideAtual.nome || "Menu Digital",
+                url: finalUrl,
+                tipo: "Menu",
+                duracao: duracaoTotal,
+                ativo: true,
+                origem: "EDITOR_V6"
+            };
+
+            try {
+                await db.doc(`usuarios/${state.ownerUid}/dispositivos/${state.deviceId}`).update({
+                    midias: firebase.firestore.FieldValue.arrayUnion(novaMidia)
+                });
+                alert(`🚀 Publicado na playlist!`);
+            } catch (e) {
+                alert("Erro: " + e.message);
+            }
+        }
+
+        function updateLive(field, value) {
+            state.slides[state.current][field] = value;
+            render();
+        }
+
+        function syncPanelInputs() {
+            const s = state.slides[state.current];
+            document.getElementById('slide-index').innerText = `${state.current + 1} / ${state.slides.length}`;
+            document.getElementById('in-title').value = s.nome;
+            document.getElementById('in-desc').value = s.descricao;
+            document.getElementById('in-price').value = s.preco;
+            document.getElementById('in-img').value = s.url;
+            document.getElementById('in-logo').value = s.logo_url || "";
+            document.getElementById('in-bg').value = s.bg;
+            document.getElementById('in-duracao').value = s.duracao || 8;
+            document.getElementById('in-size-t').value = s.size_t;
+            document.getElementById('in-size-d').value = s.size_d || 40;
+            document.getElementById('in-size-p').value = s.size_p;
+            document.getElementById('in-w-prod').value = s.w_prod || 700;
+            document.getElementById('in-w-logo').value = s.w_logo || 200;
+            document.getElementById('in-orientation').value = s.orientation || "horizontal";
+            document.getElementById('in-dark').value = s.dark_intensity || 0.4;
+            if (auth.currentUser) document.getElementById('info-user').innerText = auth.currentUser.email;
+        }
+
+        function changeSlide(dir) {
+            state.current = (state.current + dir + state.slides.length) % state.slides.length;
+            render();
+        }
+
+        function cloneSlide() {
+            const clone = JSON.parse(JSON.stringify(state.slides[state.current]));
+            state.slides.push(clone);
+            state.current = state.slides.length - 1;
+            render();
+        }
+
+        function deleteCurrentSlide() {
+            if (state.slides.length > 1) {
+                state.slides.splice(state.current, 1);
+                state.current = 0;
+                render();
+            }
+        }
+
+        function startPlayer() {
+            clearTimeout(state.timer);
+            if (!state.isEditor && state.slides.length > 1) {
+                state.timer = setTimeout(() => {
+                    state.current = (state.current + 1) % state.slides.length;
+                    render();
+                    startPlayer();
+                }, (state.slides[state.current].duracao || 8) * 1000);
+            }
+        }
+
+        async function handleAuthToggle() {
+            const user = auth.currentUser;
+            if (user && (user.uid === state.ownerUid || user.uid === ADMIN_ID)) {
+                toggleEditorMode();
+            } else {
+                const email = prompt("Email:");
+                const pass = prompt("Senha:");
+                if (email && pass) {
+                    try {
+                        await auth.signInWithEmailAndPassword(email, pass);
+                        toggleEditorMode();
+                    } catch (e) {
+                        alert("Acesso negado");
+                    }
+                }
+            }
+        }
+
+        function toggleEditorMode() {
+            state.isEditor = !state.isEditor;
+            document.body.classList.toggle('editor-active');
+            if (!state.isEditor) startPlayer();
+            else clearTimeout(state.timer);
+            setTimeout(applyScaling, 100);
+        }
+
+        function applyScaling() {
+            const stage = document.getElementById('stage');
+            const vp = document.getElementById('viewport');
+            if (!stage || !vp) return;
+            state.scale = Math.min((stage.offsetWidth - 40) / vp.offsetWidth, (stage.offsetHeight - 40) / vp.offsetHeight);
+            vp.style.transform = `scale(${state.scale})`;
+        }
+
+        interact('.element').draggable({
+            listeners: {
+                move(event) {
+                    if (!state.isEditor) return;
+                    const key = event.target.dataset.key;
+                    state.slides[state.current][key].x += event.dx / state.scale;
+                    state.slides[state.current][key].y += event.dy / state.scale;
+                    render();
+                }
+            }
+        });
+
+        window.addEventListener('resize', applyScaling);
+
+        function logout() {
+            auth.signOut().then(() => location.reload());
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cotações de Moedas</title>
+    <style>
+        /* ======== FUNDO ANIMADO ======== */
+        
+        body {
+            margin: 0;
+            font-family: 'Poppins', Arial, sans-serif;
+            background: radial-gradient(circle at 20% 20%, #00172e 0%, #000b18 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(125deg, #0046a6, #0098e6, #00c3ff, #0046a6);
+            background-size: 400% 400%;
+            z-index: -1;
+            opacity: 0.15;
+            animation: moveGradient 12s ease infinite;
+        }
+        
+        @keyframes moveGradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        /* ======== CONTAINER ======== */
+        
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        /* ======== CARTÃO ======== */
+        
+        .card {
+            background: rgba(0, 28, 66, 0.9);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.7), inset 0 0 25px rgba(0, 180, 255, 0.1);
+            border-radius: 25px;
+            padding: 50px 80px;
+            width: 750px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeSlideUp 1.2s ease forwards;
+        }
+        
+        @keyframes fadeSlideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 35px;
+            letter-spacing: 1px;
+            color: #00d4ff;
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+        /* ======== LINHAS ======== */
+        
+        .row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 22px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeRow 0.8s ease forwards;
+        }
+        
+        .row:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+        
+        .row:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+        
+        .row:nth-child(4) {
+            animation-delay: 0.9s;
+        }
+        
+        @keyframes fadeRow {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .currency {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .flag {
+            width: 60px;
+            height: 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .price {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        
+        .change {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .up {
+            color: #00ff94;
+        }
+        
+        .down {
+            color: #ff5b5b;
+        }
+        
+        .neutral {
+            color: #00c3ff;
+        }
+        /* ======== RODAPÉ ======== */
+        
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 0.5px;
+            animation: fadeRow 1s ease 1.3s forwards;
+            opacity: 0;
+        }
+        
+        footer span {
+            color: #00d4ff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="animated-bg"></div>
+    <div class="container">
+        <div class="card">
+            <div class="card-content">
+                <div class="title">💹 Cotações de Moedas</div>
+
+                <div class="row">
+                    <div class="currency">
+                        <img src="https://flagcdn.com/w80/us.png" class="flag" alt="EUA">
+                        <span>Dólar Americano</span>
+                    </div>
+                    <div class="price">R$5,25 <span class="change down">▼ -0,04%</span></div>
+                </div>
+
+                <div class="row">
+                    <div class="currency">
+                        <img src="https://flagcdn.com/w80/eu.png" class="flag" alt="Euro">
+                        <span>Euro</span>
+                    </div>
+                    <div class="price">R$6,21 <span class="change down">▼ -0,03%</span></div>
+                </div>
+
+                <div class="row">
+                    <div class="currency">
+                        <img src="https://flagcdn.com/w80/ar.png" class="flag" alt="Peso Argentino">
+                        <span>Peso Argentino</span>
+                    </div>
+                    <div class="price">R$0,05 <span class="change up">▲ +0,00%</span></div>
+                </div>
+
+                <footer>Atualizado em: <span>12/11/2025 - 16:45</span></footer>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Novelas | News Feed</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        #feed {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1s ease-in-out, opacity .8s ease-in-out;
+            display: flex;
+            align-items: flex-end;
+            opacity: 0;
+        }
+        
+        .overlay {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, .95)0%, rgba(0, 0, 0, .7)30%, rgba(0, 0, 0, 0)70%);
+            padding: 0 8% 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            z-index: 10;
+        }
+        
+        .content-wrap {
+            max-width: 1000px;
+            animation: fadeInUp .8s ease-out;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: #cc0000;
+            color: #fff;
+            padding: 5px 12px;
+            font-size: .8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            border-radius: 2px;
+            transition: background .5s;
+        }
+        
+        .title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5em;
+            line-height: 1.1;
+            font-weight: 900;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, .5);
+        }
+        
+        .description {
+            font-size: 1.4em;
+            line-height: 1.6;
+            color: #e0e0e0;
+            max-width: 850px;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            border-left: 4px solid #cc0000;
+            padding-left: 20px;
+            transition: border-color .5s;
+        }
+        
+        .logo-top {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            width: 2in;
+            height: 2in;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo-top img {
+            width: 85%;
+            height: auto;
+            object-fit: contain;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media(max-width:768px) {
+            .overlay {
+                padding: 0 5% 40px;
+            }
+            .title {
+                font-size: 2.2em;
+            }
+            .description {
+                font-size: 1.1em;
+            }
+            .logo-top {
+                top: 15px;
+                right: 15px;
+                width: 0.9in;
+                height: 0.9in;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="feed">
+
+        <div class="overlay">
+
+            <div class="content-wrap">
+
+                <span class="badge" id="novel-name">Novelas</span>
+
+                <h1 class="title" id="title">
+                    Carregando informações...
+                </h1>
+
+                <p class="description" id="description"></p>
+
+            </div>
+
+            <div class="logo-top">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Gshow.svg/960px-Gshow.svg.png" alt="Logo Gshow" onerror="this.onerror=null;this.src='https://upload.wikimedia.org/wikipedia/commons/b/b1/UOL_logo.png';">
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        (function() {
+
+            var XML_URL = "https://content.scripts.farolsign.com.br/dinamicos/scraper/globo/gshow/novelas";
+            var PROXY = "https://api.allorigins.win/raw?url=";
+
+            var FALLBACK_IMAGE = "https://images.unsplash.com/photo-1504711432869-efd597cdd042?q=80&w=1920&auto=format&fit=crop";
+
+            var feedEl = document.getElementById("feed");
+            var titleEl = document.getElementById("title");
+            var descEl = document.getElementById("description");
+            var badgeEl = document.getElementById("novel-name");
+
+            function loadData() {
+
+                var xhr = new XMLHttpRequest();
+
+                xhr.open("GET", PROXY + encodeURIComponent(XML_URL), true);
+
+                xhr.onreadystatechange = function() {
+
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+
+                        var parser = new DOMParser();
+                        var xmlDoc = parser.parseFromString(xhr.responseText, "text/xml");
+
+                        var feeds = xmlDoc.getElementsByTagName("feed");
+
+                        if (feeds.length > 0) {
+
+                            var randomIndex = Math.floor(Math.random() * feeds.length);
+
+                            var item = feeds[randomIndex];
+
+                            var tTag = item.getElementsByTagName("title")[0];
+                            var sTag = item.getElementsByTagName("subtitle")[0];
+                            var iTag = item.getElementsByTagName("image")[0];
+                            var nTag = item.getElementsByTagName("name")[0];
+                            var cTag = item.getElementsByTagName("color")[0];
+
+                            var data = {
+                                title: tTag ? tTag.textContent : "",
+                                subtitle: sTag ? sTag.textContent : "",
+                                image: iTag ? iTag.textContent : FALLBACK_IMAGE,
+                                name: nTag ? nTag.textContent : "Novelas",
+                                color: cTag ? cTag.textContent : "cc0000"
+                            };
+
+                            render(data);
+
+                        }
+
+                    }
+
+                };
+
+                xhr.send();
+
+            }
+
+            function render(data) {
+
+                var tempImg = new Image();
+
+                tempImg.src = data.image;
+
+                tempImg.onload = function() {
+
+                    feedEl.style.opacity = "0";
+
+                    setTimeout(function() {
+
+                        feedEl.style.backgroundImage = "url('" + data.image + "')";
+
+                        titleEl.textContent = data.title;
+
+                        descEl.textContent = data.subtitle;
+
+                        badgeEl.textContent = data.name;
+
+                        var hexColor = "#" + data.color;
+
+                        badgeEl.style.backgroundColor = hexColor;
+
+                        descEl.style.borderColor = hexColor;
+
+                        feedEl.style.opacity = "1";
+
+                    }, 500);
+
+                };
+
+                tempImg.onerror = function() {
+
+                    data.image = FALLBACK_IMAGE;
+
+                    render(data);
+
+                };
+
+            }
+
+            loadData();
+
+            setInterval(loadData, 20000);
+
+        })();
+    </script>
+
+</body>
+
+</html>

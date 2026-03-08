@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mega-Sena - Resultados</title>
+    <style>
+         :root {
+            --green-1: #007a2f;
+            --green-2: #00b46a;
+            --white: #ffffff;
+        }
+        
+        .wrapper {
+            position: relative;
+            top: 150px;
+            /* 1 polegada */
+        }
+        
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: var(--white);
+            overflow: hidden;
+            position: relative;
+            background: url("img/fundo.jpg") no-repeat center center / cover;
+        }
+        
+        body::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.12) 40%, rgba(0, 0, 0, 0.30) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        header {
+            position: relative;
+            z-index: 2;
+            padding: 28px 24px 0 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        header img {
+            width: 780px;
+            max-width: calc(100% - 120px);
+            height: auto;
+            filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.6));
+            opacity: 0;
+            transform: translateY(-8px);
+            animation: fadeInLogo 700ms ease forwards;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 34px;
+            font-weight: 600;
+            text-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            animation: titleIn 500ms ease forwards;
+            animation-delay: 380ms;
+            z-index: 2;
+            text-align: center;
+        }
+        
+        main {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 10px 24px 220px 24px;
+            min-height: calc(100vh - 180px);
+            box-sizing: border-box;
+        }
+        
+        .concurso {
+            margin-top: 6px;
+            margin-bottom: 8px;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.92);
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        
+        .numbers {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            margin: 12px 0 8px 0;
+            flex-wrap: wrap;
+        }
+        
+        .number {
+            background: var(--white);
+            width: 92px;
+            height: 92px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--green-1);
+            transform: translateY(6px) scale(.92);
+            opacity: 0;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.12) inset;
+        }
+        
+        .number.reveal {
+            animation: popIn 480ms cubic-bezier(.2, .9, .2, 1) forwards;
+        }
+        
+        .info {
+            margin-top: 10px;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.95);
+            text-align: center;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+        }
+        
+        .decor {
+            position: absolute;
+            right: 6px;
+            bottom: -48px;
+            width: 480px;
+            height: auto;
+            z-index: 1;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.45));
+            pointer-events: none;
+            transform-origin: bottom right;
+            animation: floatSmall 6s ease-in-out infinite alternate;
+            animation-delay: 1s;
+            opacity: 0.98;
+        }
+        
+        @keyframes floatSmall {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(-6px);
+            }
+        }
+        
+        @keyframes fadeInLogo {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes titleIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(.6) translateY(20px);
+                filter: blur(3px);
+            }
+            60% {
+                opacity: 1;
+                transform: scale(1.06) translateY(-6px);
+                filter: blur(0);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        @media (max-width:1200px) {
+            header img {
+                width: 580px;
+            }
+            .decor {
+                width: 380px;
+                bottom: -36px;
+                right: 6px;
+            }
+            .number {
+                width: 84px;
+                height: 84px;
+                font-size: 26px;
+            }
+            main {
+                padding-bottom: 180px;
+            }
+        }
+        
+        @media (max-width:768px) {
+            header img {
+                width: 420px;
+            }
+            .decor {
+                width: 300px;
+                bottom: -28px;
+                right: 6px;
+            }
+            .number {
+                width: 72px;
+                height: 72px;
+                font-size: 20px;
+            }
+            main {
+                padding-bottom: 160px;
+                padding-top: 20px;
+            }
+            h1 {
+                font-size: 26px;
+            }
+        }
+        
+        @media (max-width:420px) {
+            header img {
+                width: 260px;
+            }
+            .decor {
+                width: 220px;
+                bottom: -20px;
+                right: 4px;
+                display: block;
+            }
+            .number {
+                width: 60px;
+                height: 60px;
+                font-size: 18px;
+            }
+            main {
+                padding-bottom: 140px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="wrapper">
+
+        <header>
+            <img src="img/logo.png" alt="Mega-Sena logo" />
+            <h1>Mega-Sena - Resultados</h1>
+        </header>
+
+        <main>
+            <div class="concurso" id="concurso">Concurso: —</div>
+
+            <div class="numbers" id="numbers" aria-live="polite" aria-atomic="true">
+                <div class="number">--</div>
+                <div class="number">--</div>
+                <div class="number">--</div>
+                <div class="number">--</div>
+                <div class="number">--</div>
+                <div class="number">--</div>
+            </div>
+
+            <div class="info" id="acumulado">Acumulado: —</div>
+            <div class="info" id="dataSorteio">Data do sorteio: —</div>
+            <div class="info" id="updated">Última atualização: —</div>
+        </main>
+
+    </div>
+
+    <img src="img/mega.png" alt="decorativa" class="decor" />
+
+    <script>
+        const TITLE_DELAY = 380;
+        const NUMBERS_START_DELAY = 700;
+        const STAGGER = 420;
+
+        async function fetchResultado() {
+            try {
+                const res = await fetch('https://loteriascaixa-api.herokuapp.com/api/megasena/latest');
+                if (!res.ok) throw new Error('Erro fetching');
+                const data = await res.json();
+
+                document.getElementById('concurso').textContent = `Concurso: ${data.concurso || '—'}`;
+                document.getElementById('dataSorteio').textContent = `Data do sorteio: ${data.data || '—'}`;
+                document.getElementById('acumulado').textContent = data.valorAcumuladoProximoConcurso ?
+                    `Acumulado: R$ ${Number(data.valorAcumuladoProximoConcurso).toLocaleString('pt-BR',{minimumFractionDigits:2})}` :
+                    'Acumulado: —';
+                document.getElementById('updated').textContent = `Última atualização: ${new Date().toLocaleString('pt-BR')}`;
+
+                const numbersContainer = document.getElementById('numbers');
+                numbersContainer.innerHTML = '';
+                const dezenas = Array.isArray(data.dezenas) && data.dezenas.length ?
+                    data.dezenas.slice(0, 6) : ['--', '--', '--', '--', '--', '--'];
+
+                dezenas.forEach((n, idx) => {
+                    const d = document.createElement('div');
+                    d.className = 'number';
+                    d.textContent = n;
+                    numbersContainer.appendChild(d);
+                });
+
+                document.querySelectorAll('.number').forEach((el, i) => {
+                    setTimeout(() => el.classList.add('reveal'), NUMBERS_START_DELAY + i * STAGGER);
+                });
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('updated').textContent = 'Erro ao atualizar. Tente novamente mais tarde.';
+            }
+        }
+
+        setTimeout(fetchResultado, TITLE_DELAY + 120);
+        setInterval(fetchResultado, 5 * 60 * 1000);
+    </script>
+
+</body>
+
+</html>

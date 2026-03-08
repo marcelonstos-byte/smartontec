@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Atendimentos | Smart Mídia On</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        :root {
+            --cor-primaria: #003a5f;
+            --cor-sucesso: #217346;
+            --cor-alerta: #f29900;
+            --cor-erro: #d93025;
+            --cor-fundo: #f5f5f5;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            padding: 40px;
+            background: var(--cor-fundo);
+            color: #333;
+            margin: 0;
+        }
+        
+        h1 {
+            color: var(--cor-primaria);
+            text-align: center;
+            margin-bottom: 5px;
+            font-weight: 800;
+        }
+
+        .user-info {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .controles {
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .container-tabela {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+        }
+        
+        th, td {
+            border-bottom: 1px solid #eee;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        th {
+            background: var(--cor-primaria);
+            color: white;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        tr:nth-child(even) { background-color: #fafafa; }
+        tr:hover { background-color: #f1f7ff; }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:active { transform: scale(0.95); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-excel { background: var(--cor-sucesso); color: white; }
+        .btn-limpar { background: var(--cor-erro); color: white; }
+        .btn-finalizar { background: var(--cor-alerta); color: white; }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-aberto { background: #fff4e5; color: #b26a00; }
+    </style>
+</head>
+
+<body>
+    <h1>Relatório de Atendimentos</h1>
+    <div class="user-info" id="userInfo">Verificando autenticação...</div>
+    
+    <div class="controles">
+        <button class="btn-excel" onclick="exportarExcel()">📊 Exportar para Excel</button>
+        <button class="btn-finalizar" onclick="finalizarPendentes()">✅ Finalizar Pendentes</button>
+        <button class="btn-limpar" id="btnExcluir" onclick="excluirTodos()" disabled>⚠️ Excluir Registros</button>
+    </div>
+
+    <div class="container-tabela">
+        <table id="tabela">
+            <thead>
+                <tr>
+                    <th>Senha</th>
+                    <th>Chegada</th>
+                    <th>Chamada</th>
+                    <th>Finalização</th>
+                    <th>Cadeira</th>
+                    <th>Tempo Espera</th>
+                    <th>Tempo Atend.</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="7">Aguardando login...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZctgUfiY8t7FNz0XFBw-ha7coircJCsw",
+            authDomain: "chamadorapp.firebaseapp.com",
+            projectId: "chamadorapp",
+            storageBucket: "chamadorapp.firebasestorage.app",
+            messagingSenderId: "149731696019",
+            appId: "1:149731696019:web:ac9cd8c5f4bb1707081c66"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        let EMPRESA_ID = null;
+        let usuarioLogado = null;
+
+        // --- INICIALIZAÇÃO COM AUTH ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                usuarioLogado = user;
+                // Prioriza o ID da URL, se não houver, usa o UID do logado
+                const urlParams = new URLSearchParams(window.location.search);
+                EMPRESA_ID = urlParams.get('id') || user.uid;
+                
+                document.getElementById('userInfo').innerText = `Conectado como: ${user.email}`;
+                document.getElementById('btnExcluir').disabled = false;
+                
+                carregarDados();
+            } else {
+                document.getElementById('userInfo').innerHTML = `<b style="color:red">Acesso negado. Por favor, faça login no Chamador primeiro.</b>`;
+                document.querySelector("#tabela tbody").innerHTML = "<tr><td colspan='7'>Usuário não autenticado.</td></tr>";
+            }
+        });
+
+        function formatarTempoAmigavel(ms) {
+            if (ms === null || ms === undefined || ms < 0) return "-";
+            const totalSegundos = Math.floor(ms / 1000);
+            const horas = Math.floor(totalSegundos / 3600);
+            const minutos = Math.floor((totalSegundos % 3600) / 60);
+            const segundos = totalSegundos % 60;
+            let partes = [];
+            if (horas > 0) partes.push(`${horas}h`);
+            if (minutos > 0) partes.push(`${minutos}m`);
+            if (segundos > 0 || partes.length === 0) partes.push(`${segundos}s`);
+            return partes.join(" ");
+        }
+
+        async function carregarDados() {
+            if (!EMPRESA_ID) return;
+
+            const tbody = document.querySelector("#tabela tbody");
+            tbody.innerHTML = "<tr><td colspan='7'>🔄 Carregando dados...</td></tr>";
+
+            try {
+                db.collection("empresa").doc(EMPRESA_ID)
+                  .collection("senhas")
+                  .orderBy("horarioChegada", "desc")
+                  .onSnapshot(snapshot => {
+                    tbody.innerHTML = "";
+                    if (snapshot.empty) {
+                        tbody.innerHTML = "<tr><td colspan='7'>Nenhum registro encontrado.</td></tr>";
+                        return;
+                    }
+
+                    snapshot.forEach(doc => {
+                        const s = doc.data();
+                        const linha = document.createElement("tr");
+                        
+                        let esperaMs = (s.horarioChegada && s.horarioAtendimento) ? 
+                                       (s.horarioAtendimento.toMillis() - s.horarioChegada.toMillis()) : null;
+                        
+                        let atendimentoMs = (s.horarioAtendimento && s.horarioFinal) ? 
+                                            (s.horarioFinal.toMillis() - s.horarioAtendimento.toMillis()) : null;
+
+                        linha.innerHTML = `
+                            <td><strong>${s.numero || "---"}</strong></td>
+                            <td>${s.horarioChegada ? s.horarioChegada.toDate().toLocaleTimeString() : "-"}</td>
+                            <td>${s.horarioAtendimento ? s.horarioAtendimento.toDate().toLocaleTimeString() : "-"}</td>
+                            <td>${s.horarioFinal ? s.horarioFinal.toDate().toLocaleTimeString() : '<span class="badge status-aberto">Em aberto</span>'}</td>
+                            <td>${s.Cadeira || "-"}</td>
+                            <td>${formatarTempoAmigavel(esperaMs)}</td>
+                            <td>${formatarTempoAmigavel(atendimentoMs)}</td>
+                        `;
+                        tbody.appendChild(linha);
+                    });
+                  }, error => {
+                      console.error("Erro no Snapshot:", error);
+                      tbody.innerHTML = "<tr><td colspan='7' style='color:red'>Erro de permissão ao ler dados.</td></tr>";
+                  });
+            } catch (error) {
+                console.error("Erro:", error);
+            }
+        }
+
+        async function exportarExcel() {
+            if (!EMPRESA_ID) return;
+            const snapshot = await db.collection("empresa").doc(EMPRESA_ID).collection("senhas").orderBy("horarioChegada", "desc").get();
+            
+            const dados = snapshot.docs.map(doc => {
+                const s = doc.data();
+                let esperaMs = (s.horarioChegada && s.horarioAtendimento) ? (s.horarioAtendimento.toMillis() - s.horarioChegada.toMillis()) : null;
+                let atendimentoMs = (s.horarioAtendimento && s.horarioFinal) ? (s.horarioFinal.toMillis() - s.horarioAtendimento.toMillis()) : null;
+
+                return {
+                    "Senha": s.numero,
+                    "Data": s.horarioChegada ? s.horarioChegada.toDate().toLocaleDateString() : "",
+                    "Hora Chegada": s.horarioChegada ? s.horarioChegada.toDate().toLocaleTimeString() : "",
+                    "Hora Atendimento": s.horarioAtendimento ? s.horarioAtendimento.toDate().toLocaleTimeString() : "",
+                    "Hora Finalização": s.horarioFinal ? s.horarioFinal.toDate().toLocaleTimeString() : "Aberto",
+                    "Cadeira": s.Cadeira || "",
+                    "Espera": formatarTempoAmigavel(esperaMs),
+                    "Atendimento": formatarTempoAmigavel(atendimentoMs)
+                };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(dados);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Atendimentos");
+            XLSX.writeFile(wb, `Relatorio_${new Date().toLocaleDateString()}.xlsx`);
+        }
+
+        async function excluirTodos() {
+            if (!usuarioLogado) return alert("Você precisa estar logado.");
+            if (!confirm("⚠️ PERIGO: Todos os registros serão apagados permanentemente. Confirma?")) return;
+            
+            try {
+                const snapshot = await db.collection("empresa").doc(EMPRESA_ID).collection("senhas").get();
+                if (snapshot.empty) return alert("Nada para excluir.");
+
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                alert("Registros excluídos com sucesso.");
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao excluir: Verifique suas permissões no Firebase.");
+            }
+        }
+
+        async function finalizarPendentes() {
+            if (!usuarioLogado) return alert("Você precisa estar logado.");
+            if (!confirm("Finalizar todos os atendimentos em aberto?")) return;
+
+            try {
+                const snapshot = await db.collection("empresa").doc(EMPRESA_ID)
+                                     .collection("senhas")
+                                     .where("status", "!=", "finalizado")
+                                     .get();
+
+                const batch = db.batch();
+                let cont = 0;
+                
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    if (!d.horarioFinal) {
+                        batch.update(doc.ref, { 
+                            horarioFinal: firebase.firestore.Timestamp.now(),
+                            status: "finalizado" 
+                        });
+                        cont++;
+                    }
+                });
+
+                if (cont > 0) {
+                    await batch.commit();
+                    alert(`${cont} senhas finalizadas.`);
+                } else {
+                    alert("Nenhuma senha pendente.");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao finalizar registros.");
+            }
+        }
+    </script>
+</body>
+</html>

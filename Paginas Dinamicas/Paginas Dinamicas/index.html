@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal | Páginas Dinâmicas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+         :root {
+            --bg-color: #0f0f0f;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --accent-color: #00d2ff;
+            --text-color: #ffffff;
+            --secondary-text: #888;
+        }
+        
+        body {
+            margin: 0;
+            padding: 40px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            background-image: radial-gradient(circle at top right, #1a1a2e, #0f0f0f);
+            min-height: 100vh;
+        }
+        
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 40px;
+            letter-spacing: -1px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+        
+        .category-title {
+            grid-column: 1 / -1;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: var(--secondary-text);
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        /* Estrutura de Card Agrupado */
+        
+        .card-box {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .card-box:hover {
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-3px);
+        }
+        
+        .main-link {
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: block;
+        }
+        
+        .version-links {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 10px;
+        }
+        
+        .version-links a {
+            text-decoration: none;
+            color: var(--accent-color);
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            background: rgba(0, 210, 255, 0.1);
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+        
+        .version-links a:hover {
+            background: var(--accent-color);
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Portal de Páginas Dinâmicas</h1>
+
+    <div class="container">
+
+        <div class="category-title">Utilidades e Clima</div>
+
+        <div class="card-box">
+            <a href="NesteDia/index.html" class="main-link">📅 Neste Dia</a>
+        </div>
+
+        <div class="card-box">
+            <a href="Clima - BTG/index.html" class="main-link">🌤️ Clima BTG</a>
+        </div>
+
+        <div class="card-box">
+            <a href="Clima - GPS/index.html" class="main-link">📍 Clima GPS</a>
+        </div>
+
+        <div class="card-box">
+            <a href="Conversor de Moedas/index.html" class="main-link">💵 Conversor Moedas</a>
+            <div class="version-links">
+                <a href="Conversor de Moedas/index.html">V1</a>
+                <a href="Conversor de Moedas/index1.html">V2</a>
+            </div>
+        </div>
+
+        <div class="card-box">
+            <a href="relogio-main/index.html" class="main-link">⌚ Relógios</a>
+            <div class="version-links">
+                <a href="relogio-main/index.html">Main</a>
+                <a href="relogioBtg/index.html">BTG</a>
+            </div>
+        </div>
+
+        <div class="category-title">Conteúdo e News</div>
+
+        <div class="card-box">
+            <a href="Uau.html" class="main-link">✨ Uau!</a>
+        </div>
+
+        <div class="card-box">
+            <a href="news - Novelas/index.html" class="main-link">🎭 Novelas</a>
+        </div>
+
+        <div class="card-box">
+            <a href="TopHits/index.html" class="main-link">🎵 Top Hits</a>
+        </div>
+
+        <div class="card-box">
+            <a href="news - g1/index.html" class="main-link">📰 G1 News</a>
+        </div>
+
+        <div class="card-box">
+            <a href="news - Gazeta/index.html" class="main-link">🗞️ Gazeta</a>
+        </div>
+
+        <div class="card-box">
+            <a href="AdoroCinema/index.html" class="main-link">🎬 AdoroCinema</a>
+        </div>
+
+        <div class="card-box">
+            <a href="TecMundo/index.html" class="main-link">💻 TecMundo</a>
+        </div>
+
+        <div class="category-title">Diversos e Jogos</div>
+
+        <div class="card-box">
+            <a href="MegaSena/index.html" class="main-link">🎰 MegaSena</a>
+            <div class="version-links">
+                <a href="MegaSena/index.html">V1</a>
+                <a href="MegaSena/index1.html">V2</a>
+            </div>
+        </div>
+
+        <div class="card-box">
+            <a href="horoscopohorizontal-main/index.html" class="main-link">✨ Horóscopo</a>
+        </div>
+
+        <div class="card-box">
+            <a href="Inteligência Artificial/AI.html" class="main-link">🤖 I.A. Portal</a>
+        </div>
+
+        <div class="card-box">
+            <a href="Engraçados/index.html" class="main-link">😂 Engraçados</a>
+        </div>
+
+        <div class="card-box">
+            <a href="fr453s/index.html" class="main-link">📜 Frases</a>
+        </div>
+
+        <div class="category-title">Monitoramento de Trânsito</div>
+
+        <div class="card-box">
+            <a href="https://www.waze.com/live-map/directions?latlng=-23.816993%2C-46.103783&zoom=13" target="_blank" class="main-link">🗺️ Waze Live Map</a>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

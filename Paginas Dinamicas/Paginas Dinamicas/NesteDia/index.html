@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Neste Dia | Datas Comemorativas</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --accent: #00d2ff;
+            --glass: rgba(0, 0, 0, 0.75);
+            --bg-url: url("https://images.unsplash.com/photo-1506784365847-bbad939e9335?q=80&w=2068");
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), var(--bg-url);
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #feed {
+            width: 100%;
+            max-width: 850px;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+        
+        .modal {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 60px 40px 40px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .logo-top {
+            position: absolute;
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 90px;
+            background: #fff;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .logo-top img {
+            width: 85%;
+            height: auto;
+            object-fit: contain;
+        }
+        
+        .badge {
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 700;
+            font-size: .85em;
+            color: var(--accent);
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .main-title {
+            font-size: 3.8em;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .date-text {
+            font-size: 1.5em;
+            font-weight: 300;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--accent);
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+        
+        .list-wrapper {
+            position: relative;
+            max-height: 350px;
+            overflow: hidden;
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+            mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+        }
+        
+        .event-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 20px 0;
+            text-align: left;
+            transition: transform 0.1s linear;
+        }
+        
+        .event-card {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 15px 20px;
+            border-radius: 12px;
+            border-left: 5px solid var(--accent);
+            font-size: 1.3em;
+            line-height: 1.4;
+            animation: slideIn .5s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .footer-line {
+            margin-top: 30px;
+            font-size: .7em;
+            opacity: .5;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        @media (max-width:600px) {
+            .main-title {
+                font-size: 2.2em;
+            }
+            .date-text {
+                font-size: 1.1em;
+            }
+            .modal {
+                padding: 50px 20px 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="feed">
+        <div class="modal">
+            <div class="logo-top">
+                <img src="img/UOL LOGO.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/b/b1/UOL_logo.png'">
+            </div>
+
+            <span class="badge" id="month-label">Carregando...</span>
+            <h1 class="main-title">Neste Dia</h1>
+
+            <div class="date-container">
+                <span class="date-text" id="display-date">-- de --</span>
+            </div>
+
+            <div class="list-wrapper" id="scroll-wrapper">
+                <div id="events-list" class="event-container"></div>
+            </div>
+
+            <p class="footer-line">Calendário de Datas Comemorativas</p>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const XML_URL = "https://content.scripts.farolsign.com.br/dinamicos/scraper/outros/datas-comemorativas";
+            const PROXY = "https://api.allorigins.win/raw?url=";
+
+            const feedEl = document.getElementById("feed");
+            const monthLabel = document.getElementById("month-label");
+            const dateDisplay = document.getElementById("display-date");
+            const eventsList = document.getElementById("events-list");
+            const scrollWrapper = document.getElementById("scroll-wrapper");
+
+            function fetchData() {
+                const xhr = new XMLHttpRequest();
+                xhr.open("GET", PROXY + encodeURIComponent(XML_URL), true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        try {
+                            const xmlDoc = new DOMParser().parseFromString(xhr.responseText, "text/xml");
+                            const days = xmlDoc.getElementsByTagName("day");
+                            const nameTag = xmlDoc.getElementsByTagName("name")[0];
+                            const xmlMonthName = nameTag ? nameTag.textContent : "";
+
+                            const hoje = new Date();
+                            const dia = String(hoje.getDate()).padStart(2, '0');
+                            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                            const anoAtual = hoje.getFullYear();
+
+                            // Tenta buscar no ano atual e no ano base 2016
+                            const datasParaTestar = [`${anoAtual}-${mes}-${dia}`, `2016-${mes}-${dia}`];
+                            let foundItems = [];
+
+                            for (let d = 0; d < datasParaTestar.length; d++) {
+                                for (let i = 0; i < days.length; i++) {
+                                    const xmlDate = days[i].getElementsByTagName("date")[0].textContent;
+                                    if (xmlDate === datasParaTestar[d]) {
+                                        // Busca por 'title' (novo padrão) ou 'item' (padrão antigo)
+                                        const tagsInteresse = ["title", "item"];
+                                        tagsInteresse.forEach(tagName => {
+                                            const elements = days[i].getElementsByTagName(tagName);
+                                            for (let j = 0; j < elements.length; j++) {
+                                                const txt = elements[j].textContent.trim();
+                                                if (txt && !foundItems.includes(txt)) foundItems.push(txt);
+                                            }
+                                        });
+                                        if (foundItems.length > 0) break;
+                                    }
+                                }
+                                if (foundItems.length > 0) break;
+                            }
+
+                            render(xmlMonthName, dia, mes, anoAtual, foundItems);
+                        } catch (e) {
+                            console.error("Erro no processamento:", e);
+                            render("", "", "", "", []);
+                        }
+                    }
+                };
+                xhr.send();
+            }
+
+            function render(monthName, dia, mes, ano, events) {
+                feedEl.style.opacity = "0";
+                setTimeout(() => {
+                    const mesesNome = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+                    monthLabel.textContent = monthName || mesesNome[parseInt(mes) - 1] || "Calendário";
+                    dateDisplay.textContent = dia ? `${dia} de ${mesesNome[parseInt(mes)-1]} de ${ano}` : "Data não disponível";
+
+                    eventsList.innerHTML = "";
+                    eventsList.style.transform = "translateY(0)";
+
+                    if (events.length > 0) {
+                        events.forEach((text, i) => {
+                            const item = document.createElement("div");
+                            item.className = "event-card";
+                            item.style.animationDelay = (i * 0.15) + "s";
+                            item.textContent = text;
+                            eventsList.appendChild(item);
+                        });
+                    } else {
+                        eventsList.innerHTML = "<div class='event-card' style='border:none; text-align:center;'>Novas histórias estão sendo escritas hoje.</div>";
+                    }
+
+                    feedEl.style.opacity = "1";
+                    setTimeout(startAutoScroll, 3000);
+                }, 800);
+            }
+
+            let scrollInterval;
+
+            function startAutoScroll() {
+                clearInterval(scrollInterval);
+                const diff = eventsList.scrollHeight - scrollWrapper.offsetHeight;
+                if (diff > 0) {
+                    let pos = 0;
+                    scrollInterval = setInterval(() => {
+                        pos += 0.5; // Velocidade mais suave
+                        if (pos > diff + 60) pos = -30;
+                        eventsList.style.transform = `translateY(-${pos < 0 ? 0 : pos}px)`;
+                    }, 30);
+                }
+            }
+
+            fetchData();
+            setInterval(fetchData, 3600000);
+        })();
+    </script>
+</body>
+
+</html>

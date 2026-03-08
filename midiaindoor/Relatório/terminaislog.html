@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Mídia • Console de Disponibilidade</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --primary: #1e293b;
+            --brand: #2563eb;
+            --brand-light: #eff6ff;
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+            --error: #f43f5e;
+            --error-bg: #fff1f2;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+        }
+        
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            padding: 40px 20px;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            gap: 24px;
+            background: white;
+            padding: 24px 32px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+        }
+        
+        .header-info h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--primary);
+        }
+        
+        .company-tag {
+            display: inline-flex;
+            align-items: center;
+            margin-top: 8px;
+            padding: 6px 14px;
+            background: var(--brand-light);
+            color: var(--brand);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid rgba(37, 99, 235, 0.1);
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .controls label {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        select {
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border);
+            font-family: inherit;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            min-width: 260px;
+            background-color: white;
+        }
+        
+        select:focus {
+            border-color: var(--brand);
+        }
+        
+        .terminal-group {
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            margin-bottom: 32px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        
+        .terminal-header {
+            background: #ffffff;
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .terminal-header .title-area h2 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: 800;
+            color: var(--brand);
+        }
+        
+        .terminal-header .device-id {
+            display: block;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 11px;
+            margin-top: 4px;
+            font-family: monospace;
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 4px;
+            width: fit-content;
+        }
+        
+        .status-badge {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 8px 16px;
+            border-radius: 100px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .timeline-container {
+            padding: 32px;
+            background: #fafafa;
+        }
+        
+        .log-item {
+            display: flex;
+            gap: 24px;
+            padding-bottom: 30px;
+            position: relative;
+        }
+        
+        .log-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 32px;
+            width: 2px;
+            height: calc(100% - 32px);
+            background: var(--border);
+        }
+        
+        .log-icon-wrap {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+        
+        .item-on .log-icon-wrap {
+            background: var(--success);
+            color: white;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+        
+        .item-off .log-icon-wrap {
+            background: var(--error);
+            color: white;
+            box-shadow: 0 4px 10px rgba(244, 63, 94, 0.3);
+        }
+        
+        .log-content {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+        
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .log-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--primary);
+        }
+        
+        .log-time {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+        
+        .log-duration {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            background: var(--bg);
+            padding: 8px 14px;
+            border-radius: 10px;
+            color: var(--primary);
+        }
+        
+        .critical-pulse {
+            animation: pulse 2s infinite;
+            border: 2px solid var(--error);
+        }
+        
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: var(--muted);
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 2px dashed var(--border);
+            font-weight: 600;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #d1d5db;
+            color: #374151;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <div class="header-info">
+                <button class="btn-outline" onclick="window.location.href='../central.html'">← Voltar</button>
+                <h1>Painel de Disponibilidade</h1>
+                <div id="subtitulo" class="company-tag">Identificando empresa...</div>
+            </div>
+
+            <div class="controls">
+                <label for="deviceSelect">Filtrar por Tela</label>
+                <select id="deviceSelect" onchange="renderizarInterface()">
+                    <option value="todos">Todas as Telas</option>
+                </select>
+            </div>
+        </header>
+
+        <div id="listaTerminais"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDiTbWSlcKpsPEtEzPkSU0jHZkfcAg5fNU",
+            authDomain: "newsmartonapp.firebaseapp.com",
+            databaseURL: "https://newsmartonapp-default-rtdb.firebaseio.com",
+            projectId: "newsmartonapp",
+            storageBucket: "newsmartonapp.firebasestorage.app",
+            messagingSenderId: "1096968028299",
+            appId: "1:1096968028299:web:f3a9e48db108afbbb7548e"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const firestore = firebase.firestore();
+        const auth = firebase.auth();
+
+        const LIMITE_INATIVIDADE = 2 * 60 * 1000;
+        let globalData = {};
+        let nomesTerminais = {};
+
+        auth.onAuthStateChanged(async user => {
+            if (user) {
+                const empresaId = localStorage.getItem('empresaId') || user.uid;
+
+                // 1. Busca nome da EMPRESA no FIRESTORE
+                try {
+                    const docEmpresa = await firestore.collection('usuarios').doc(empresaId).get();
+                    if (docEmpresa.exists) {
+                        const nomeEmpresa = docEmpresa.data().nome;
+                        document.getElementById('subtitulo').innerHTML = `<span>🏢</span> EMPRESA: ${nomeEmpresa || empresaId}`;
+                    } else {
+                        document.getElementById('subtitulo').innerHTML = `<span>🏢</span> ID: ${empresaId}`;
+                    }
+                } catch (e) {
+                    console.error("Erro Firestore Empresa:", e);
+                }
+
+                // 2. Carrega nomes das TELAS e inicia LOGS
+                carregarNomesEMonitorar(empresaId);
+            } else {
+                document.getElementById('subtitulo').innerText = "Acesso restrito";
+            }
+        });
+
+        // FUNÇÃO ATUALIZADA: Busca a estrutura no Cloud Firestore
+        function carregarNomesEMonitorar(empresaId) {
+            // Monitora a subcoleção 'dispositivos' no FIRESTORE para nomes amigáveis
+            firestore.collection('usuarios').doc(empresaId).collection('dispositivos')
+                .onSnapshot(snapshot => {
+                    nomesTerminais = {};
+                    snapshot.forEach(doc => {
+                        // Mapeia o ID do documento ao campo 'nomeTela'
+                        nomesTerminais[doc.id] = doc.data().nomeTela || doc.id;
+                    });
+
+                    // Inicia o monitoramento de LOGS no REALTIME DATABASE
+                    iniciarMonitoramento(empresaId);
+                }, error => {
+                    console.error("Erro ao ler nomes das telas:", error);
+                    // Mesmo com erro no Firestore, tenta carregar os logs
+                    iniciarMonitoramento(empresaId);
+                });
+        }
+
+        function iniciarMonitoramento(id) {
+            database.ref(`exibicoes/${id}`).on('value', snap => {
+                globalData = snap.val() || {};
+                atualizarSeletor(Object.keys(globalData));
+                renderizarInterface();
+            });
+        }
+
+        function atualizarSeletor(deviceIds) {
+            const select = document.getElementById('deviceSelect');
+            const valorAtual = select.value;
+            select.innerHTML = '<option value="todos">Todas as Telas</option>';
+
+            const listaOrdenada = deviceIds.map(id => ({
+                id,
+                nome: nomesTerminais[id] || id
+            })).sort((a, b) => a.nome.localeCompare(b.nome));
+
+            listaOrdenada.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = item.nome;
+                select.appendChild(opt);
+            });
+            if (deviceIds.includes(valorAtual)) select.value = valorAtual;
+        }
+
+        function renderizarInterface() {
+            const container = document.getElementById('listaTerminais');
+            const filtro = document.getElementById('deviceSelect').value;
+            container.innerHTML = "";
+
+            const terminaisExibir = filtro === "todos" ? Object.keys(globalData) : [filtro];
+
+            if (terminaisExibir.length === 0 || !terminaisExibir[0]) {
+                container.innerHTML = '<div class="no-data">Nenhuma atividade detectada para esta empresa.</div>';
+                return;
+            }
+
+            terminaisExibir.forEach(painelId => {
+                        const logsRaw = globalData[painelId];
+                        if (!logsRaw) return;
+
+                        // Usa o nome amigável vindo do Firestore
+                        const nomeTelaDisplay = nomesTerminais[painelId] || "Terminal s/ Nome";
+
+                        const logsTratados = Object.values(logsRaw)
+                            .map(l => tratarTimestamp(l.timestamp))
+                            .filter(ts => ts !== null)
+                            .sort((a, b) => a - b);
+
+                        if (logsTratados.length === 0) return;
+
+                        let eventos = [];
+                        let inicioSessao = logsTratados[0];
+                        let ultimoLogSessao = logsTratados[0];
+
+                        for (let i = 1; i < logsTratados.length; i++) {
+                            if ((logsTratados[i] - ultimoLogSessao) > LIMITE_INATIVIDADE) {
+                                eventos.push({
+                                    tipo: 'ON',
+                                    inicio: inicioSessao,
+                                    fim: ultimoLogSessao
+                                });
+                                eventos.push({
+                                    tipo: 'OFF',
+                                    inicio: ultimoLogSessao,
+                                    fim: logsTratados[i]
+                                });
+                                inicioSessao = logsTratados[i];
+                            }
+                            ultimoLogSessao = logsTratados[i];
+                        }
+
+                        const agora = Date.now();
+                        const isOffline = (agora - ultimoLogSessao) > LIMITE_INATIVIDADE;
+                        eventos.push({
+                            tipo: 'ON',
+                            inicio: inicioSessao,
+                            fim: ultimoLogSessao
+                        });
+                        if (isOffline) eventos.push({
+                            tipo: 'OFF',
+                            inicio: ultimoLogSessao,
+                            fim: agora,
+                            atual: true
+                        });
+
+                        const terminalDiv = document.createElement('div');
+                        terminalDiv.className = 'terminal-group';
+                        terminalDiv.innerHTML = `
+                    <div class="terminal-header">
+                        <div class="title-area">
+                            <h2>${nomeTelaDisplay}</h2>
+                            <span class="device-id">ID: ${painelId}</span>
+                        </div>
+                        <span class="status-badge" style="background:${isOffline ? 'var(--error-bg)':'var(--success-bg)'}; color:${isOffline ? 'var(--error)':'var(--success)'}">
+                            ${isOffline ? '● Desconectado' : '● Online'}
+                        </span>
+                    </div>
+                    <div class="timeline-container">
+                        ${eventos.reverse().slice(0, 15).map(ev => { 
+                            const isOn = ev.tipo === 'ON';
+                            const duracao = ev.fim - ev.inicio;
+                            return `
+                                <div class="log-item ${isOn ? 'item-on' : 'item-off'}">
+                                    <div class="log-icon-wrap">${isOn ? '✓' : '✕'}</div>
+                                    <div class="log-content ${ev.atual ? 'critical-pulse' : ''}">
+                                        <div class="log-header">
+                                            <span class="log-title">${isOn ? 'Sinal Ativo' : 'Sinal Interrompido'}</span>
+                                            <span class="log-time">${new Date(ev.inicio).toLocaleString('pt-BR')}</span>
+                                        </div>
+                                        <div class="log-duration">
+                                            <span>⏱️</span> 
+                                            <span>${isOn ? 'Operou por:' : 'Inativo por:'} ${calcularDuracao(duracao)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                container.appendChild(terminalDiv);
+            });
+        }
+
+        function tratarTimestamp(raw) {
+            let ts = Number(raw);
+            if (isNaN(ts) && raw) ts = new Date(raw).getTime();
+            if (ts > 0 && ts < 1e12) ts = ts * 1000;
+            return (!isNaN(ts) && ts > 0) ? ts : null;
+        }
+
+        function calcularDuracao(ms) {
+            const seg = Math.floor(ms / 1000);
+            const min = Math.floor(seg / 60);
+            const hor = Math.floor(min / 60);
+            const dias = Math.floor(hor / 24);
+            
+            if (dias > 0) return `${dias}d ${hor % 24}h`;
+            if (hor > 0) return `${hor}h ${min % 60}m`;
+            if (min > 0) return `${min}m ${seg % 60}s`;
+            return `${seg}s`;
+        }
+    </script>
+</body>
+
+</html>

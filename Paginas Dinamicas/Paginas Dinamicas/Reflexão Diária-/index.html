@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Frases Inspiradoras</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  background-image: url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee");
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Montserrat', sans-serif;
+  position: relative;
+}
+
+/* Camada de suavização */
+.overlay {
+  background: rgba(0, 0, 0, 0.35);
+  position: absolute;
+  inset: 0;
+}
+
+/* Container para permitir sobreposição */
+.wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+/* Caixa da frase */
+.card {
+  position: relative;
+  width: 720px;
+  height: 254px;
+  padding: 32px 60px 40px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 18px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Título fixo */
+.titulo {
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #777;
+  margin-bottom: 14px;
+  font-weight: 500;
+
+  margin-left: 0.2cm; /* desloca o título 0,2cm para a direita */
+}
+
+
+/* Imagem do pensador SOBRE a caixa */
+.pensador {
+  position: absolute;
+  top: -22px;
+  left: -10px; /* 0,3cm mais à direita */
+  width: 90px;
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Texto da frase */
+.frase {
+  flex: 1;
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  line-height: 1.45;
+  color: #222;
+  text-align: center;
+
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+/* Letras individuais */
+.frase span {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* Autor */
+.autor {
+  margin-top: 12px;
+  text-align: right;
+  font-size: 16px;
+  color: #555;
+  font-style: italic;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+</style>
+</head>
+
+<body>
+
+<div class="overlay"></div>
+
+<div class="wrapper">
+  <img
+    class="pensador"
+    src="https://png.pngtree.com/png-vector/20230728/ourmid/pngtree-socrates-clipart-ancient-greek-philosopher-in-the-chair-on-his-knees-vector-png-image_6817071.png"
+    alt="Pensador">
+
+  <div class="card">
+    <div class="titulo">Reflexão Diária</div>
+    <div class="frase" id="frase"></div>
+    <div class="autor" id="autor"></div>
+  </div>
+</div>
+
+<script>
+const frases = [
+
+
+  // —— FILÓSOFOS CLÁSSICOS ——
+
+  { texto: "A felicidade depende de nós.", autor: "Aristóteles" },
+  { texto: "A dúvida é o início da sabedoria.", autor: "Aristóteles" },
+  { texto: "A virtude está no meio.", autor: "Aristóteles" },
+  { texto: "O hábito forma o caráter.", autor: "Aristóteles" },
+
+  { texto: "Penso, logo existo.", autor: "René Descartes" },
+  { texto: "A razão deve duvidar.", autor: "René Descartes" },
+
+  { texto: "A amizade é essencial.", autor: "Epicuro" },
+  { texto: "A simplicidade é o último grau.", autor: "Epicuro" },
+  { texto: "O prazer moderado basta.", autor: "Epicuro" },
+
+  { texto: "Não entramos duas vezes no mesmo rio.", autor: "Heráclito" },
+  { texto: "O conflito gera harmonia.", autor: "Heráclito" },
+  { texto: "Tudo flui.", autor: "Heráclito" },
+
+  { texto: "A liberdade é prática.", autor: "Immanuel Kant" },
+  { texto: "Age por dever.", autor: "Immanuel Kant" },
+
+  { texto: "O homem cria valores.", autor: "Friedrich Nietzsche" },
+  { texto: "O que não nos destrói fortalece.", autor: "Friedrich Nietzsche" },
+  { texto: "Torna-te quem tu és.", autor: "Friedrich Nietzsche" },
+
+  { texto: "Nada em excesso.", autor: "Platão" },
+  { texto: "Pensar é dialogar consigo.", autor: "Platão" },
+  { texto: "A sabedoria começa no espanto.", autor: "Platão" },
+
+  { texto: "O homem é a medida de todas as coisas.", autor: "Protágoras" },
+
+  { texto: "A liberdade exige coragem.", autor: "Jean-Paul Sartre" },
+  { texto: "Estamos condenados à liberdade.", autor: "Jean-Paul Sartre" },
+
+  { texto: "A vida oscila como um pêndulo.", autor: "Schopenhauer" },
+  { texto: "A vontade move o mundo.", autor: "Schopenhauer" },
+
+  { texto: "A pressa é inimiga da razão.", autor: "Sêneca" },
+  { texto: "A vida é curta.", autor: "Sêneca" },
+  { texto: "Enquanto vivemos, aprendemos.", autor: "Sêneca" },
+  { texto: "O destino guia quem aceita.", autor: "Sêneca" },
+  { texto: "O tempo revela a verdade.", autor: "Sêneca" },
+
+  { texto: "Conhece-te a ti mesmo.", autor: "Sócrates" },
+  { texto: "A vida sem reflexão não vale a pena.", autor: "Sócrates" },
+
+  // —— FRASES ANÔNIMAS / MODERNAS ——
+
+  { texto: "A atenção muda o caminho.", autor: "Autor desconhecido" },
+  { texto: "A atenção muda resultados.", autor: "Autor anônimo" },
+  { texto: "A calma também decide.", autor: "Pensador moderno" },
+  { texto: "A calma evita excessos.", autor: "Autor desconhecido" },
+  { texto: "A calma sustenta decisões.", autor: "Autor desconhecido" },
+  { texto: "A clareza vem com o tempo.", autor: "Autor desconhecido" },
+  { texto: "A constância cria resultados.", autor: "Autor desconhecido" },
+  { texto: "A constância gera confiança.", autor: "Autor anônimo" },
+  { texto: "A constância vence o impulso.", autor: "Autor desconhecido" },
+  { texto: "A escolha diária transforma.", autor: "Autor desconhecido" },
+  { texto: "A pausa evita erros.", autor: "Autor anônimo" },
+  { texto: "A pausa também constrói.", autor: "Autor desconhecido" },
+  { texto: "A paciência orienta o passo.", autor: "Autor anônimo" },
+  { texto: "A repetição cria excelência.", autor: "Pensador moderno" },
+  { texto: "A rotina sustenta o progresso.", autor: "Autor anônimo" },
+  { texto: "A simplicidade traz clareza.", autor: "Autor anônimo" },
+  { texto: "Atenção revela detalhes.", autor: "Autor desconhecido" },
+  { texto: "Disciplina molda o invisível.", autor: "Autor anônimo" },
+  { texto: "Menos pressa, mais clareza.", autor: "Pensador moderno" },
+  { texto: "Menos reação, mais intenção.", autor: "Pensador moderno" },
+  { texto: "Menos ruído, mais foco.", autor: "Autor anônimo" },
+  { texto: "Nem toda escolha é urgente.", autor: "Autor anônimo" },
+  { texto: "Nem toda resposta é imediata.", autor: "Autor anônimo" },
+  { texto: "Nem tudo exige resposta.", autor: "Autor anônimo" },
+  { texto: "Nem tudo precisa ser agora.", autor: "Autor desconhecido" },
+  { texto: "Nem tudo precisa ser dito.", autor: "Autor desconhecido" },
+  { texto: "Ouvir evita erros futuros.", autor: "Autor anônimo" },
+  { texto: "Pensar antes poupa esforço.", autor: "Autor desconhecido" },
+  { texto: "Persistência supera talento.", autor: "Autor anônimo" },
+  { texto: "Persistir é avançar em silêncio.", autor: "Pensador moderno" },
+  { texto: "Persistir é escolher continuar.", autor: "Autor desconhecido" },
+  { texto: "O foco elimina distrações.", autor: "Autor desconhecido" },
+  { texto: "O hábito define resultados.", autor: "Autor desconhecido" },
+  { texto: "O hábito vence o acaso.", autor: "Autor desconhecido" },
+  { texto: "O simples costuma funcionar.", autor: "Autor anônimo" },
+  { texto: "O simples também é profundo.", autor: "Autor anônimo" },
+  { texto: "O silêncio organiza ideias.", autor: "Autor anônimo" },
+  { texto: "O silêncio também orienta.", autor: "Autor anônimo" },
+  { texto: "O tempo ajusta decisões.", autor: "Pensador moderno" },
+  { texto: "O tempo ensina em silêncio.", autor: "Autor desconhecido" }
+
+];
+
+
+const fraseEl = document.getElementById("frase");
+const autorEl = document.getElementById("autor");
+
+const fraseEscolhida = frases[Math.floor(Math.random() * frases.length)];
+
+fraseEl.innerHTML = fraseEscolhida.texto
+  .split("")
+  .map(letra => `<span>${letra === " " ? "&nbsp;" : letra}</span>`)
+  .join("");
+
+const letras = fraseEl.querySelectorAll("span");
+let index = 0;
+
+setTimeout(() => {
+  function digitar() {
+    letras[index].style.opacity = 1;
+    index++;
+
+    if (index < letras.length) {
+      setTimeout(digitar, 55 + Math.random() * 25);
+    } else {
+      autorEl.textContent = `— ${fraseEscolhida.autor}`;
+      autorEl.style.opacity = 1;
+    }
+  }
+  digitar();
+}, 1200);
+</script>
+
+</body>
+</html>
