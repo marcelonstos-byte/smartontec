@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart On | Master ERP Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+         :root {
+            --primary: #03517e;
+            --bg: #f4f7fe;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --info: #6366f1;
+            --sidebar-width: 400px;
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+            transition: background 0.3s;
+            overflow-x: hidden;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .stat-box i {
+            width: 45px;
+            height: 45px;
+            background: #f0f7ff;
+            color: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px;
+            color: #64748b;
+            font-size: 11px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        
+        td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+        
+        tr.user-row {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        tr.user-row:hover {
+            background: #f8fafc;
+        }
+        
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            margin-right: 2px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .btn-view {
+            background: var(--info);
+        }
+        
+        .btn-pay {
+            background: var(--success);
+        }
+        
+        .btn-history {
+            background: #64748b;
+        }
+        
+        .btn-ban {
+            background: var(--danger);
+        }
+        
+        .btn-unban {
+            background: #1e293b;
+        }
+        
+        .btn-key {
+            background: var(--warning);
+        }
+        
+        .btn-save-side {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            width: 100%;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-whatsapp {
+            background: #25d366;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        
+        .badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-late {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        
+        .status-blocked {
+            background: #334155;
+            color: white;
+        }
+        
+        .limit-alert {
+            color: var(--danger);
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        
+        .side-panel {
+            position: fixed;
+            top: 0;
+            right: -450px;
+            width: 100%;
+            max-width: var(--sidebar-width);
+            height: 100vh;
+            background: white;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .side-panel.open {
+            right: 0;
+        }
+        
+        .side-panel-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: none;
+            z-index: 1999;
+            backdrop-filter: blur(2px);
+        }
+        
+        .side-header {
+            padding: 30px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .side-body {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .info-group {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 15px;
+        }
+        
+        .info-label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        
+        .side-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-top: 5px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2100;
+            backdrop-filter: blur(8px);
+        }
+        
+        .modal-content {
+            background: white;
+            width: 95%;
+            max-width: 900px;
+            max-height: 90vh;
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            padding: 20px 30px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #03517e;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            text-align: center;
+        }
+        
+        .price-tag-badge {
+            font-size: 10px;
+            background: #f1f5f9;
+            color: #475569;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+        }
+        
+        .price-tag-badge.custom {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        /* Novas Classes para Terminais */
+        
+        .terminal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .terminal-item {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .media-preview {
+            width: 100%;
+            height: 120px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            position: relative;
+        }
+        
+        .media-preview img,
+        .media-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .media-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 5px;
+            font-size: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loader" class="loading-overlay">
+        <i class="fas fa-rocket fa-spin fa-3x"></i>
+        <h2 style="margin-top:20px">Sincronizando Smart On...</h2>
+    </div>
+
+    <div id="sideOverlay" class="side-panel-overlay" onclick="closeSidePanel()"></div>
+    <div id="sidePanel" class="side-panel">
+        <div class="side-header">
+            <h3><i class="fas fa-user-circle"></i> Detalhes do Cliente</h3>
+            <button onclick="closeSidePanel()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+        <div id="sideBody" class="side-body"></div>
+    </div>
+
+    <div class="config-bar" style="background:white; padding:15px 25px; border-radius:15px; margin-bottom:20px; display:flex; align-items:center; gap:20px; border:1px solid #e2e8f0;">
+        <div style="display:flex; align-items:center; gap:10px">
+            <i class="fas fa-hand-holding-dollar" style="color:var(--success)"></i>
+            <label style="font-weight:600; font-size:14px">Valor Padrão Global (R$):</label>
+            <input type="number" id="valor-base" value="35.00" step="0.50" onchange="saveGlobalPrice(this.value)" style="padding:8px; border-radius:8px; border:1px solid #ddd; width:80px">
+            <span id="price-status" style="font-size: 12px; color: var(--success); display: none;"><i class="fas fa-check"></i> Salvo</span>
+        </div>
+        <small style="color:#64748b">O sistema prioriza o valor personalizado definido no cadastro do usuário.</small>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-box">
+            <i class="fas fa-users"></i>
+            <div><small>Clientes</small>
+                <h2 id="stat-users">0</h2>
+            </div>
+        </div>
+        <div class="stat-box">
+            <i class="fas fa-desktop"></i>
+            <div><small>Terminais</small>
+                <h2 id="stat-terminals">0</h2>
+            </div>
+        </div>
+        <div class="stat-box">
+            <i class="fas fa-money-bill-trend-up" style="color: var(--danger);"></i>
+            <div><small>Atrasados</small>
+                <h2 id="stat-late">0</h2>
+            </div>
+        </div>
+        <div class="stat-box">
+            <i class="fas fa-signal" style="color: var(--success);"></i>
+            <div><small>Online</small>
+                <h2 id="stat-online">0</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0"><i class="fas fa-shield-halved"></i> Gestão Master de Acessos</h2>
+                <button onclick="logout()" style="background:#f1f5f9; border:none; padding:8px 15px; border-radius:8px; cursor:pointer;"><i class="fas fa-power-off"></i> Sair</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente / E-mail</th>
+                        <th>Vencimento</th>
+                        <th>Uso / Limite / Preço</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="userList"></tbody>
+            </table>
+        </div>
+
+        <div class="card" style="text-align:center;">
+            <h3>Saúde do Negócio</h3>
+            <canvas id="mainChart"></canvas>
+        </div>
+    </div>
+
+    <div id="mainModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Detalhes</h3>
+                <button onclick="closeModal()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div id="modalBody" class="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDiTbWSlcKpsPEtEzPkSU0jHZkfcAg5fNU",
+            authDomain: "newsmartonapp.firebaseapp.com",
+            projectId: "newsmartonapp",
+            storageBucket: "newsmartonapp.firebasestorage.app",
+            messagingSenderId: "1096968028299",
+            appId: "1:1096968028299:web:f3a9e48db108afbbb7548e"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const MASTER_ID = "DrzBYJWuNAOoAIRGWfrsKdVFhYr2";
+
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                window.location.href = "login.html";
+            } else if (user.uid !== MASTER_ID) {
+                document.getElementById('loader').innerHTML = `<i class="fas fa-user-lock fa-5x"></i><h1>ACESSO NEGADO</h1>`;
+                setTimeout(() => auth.signOut().then(() => window.location.href = "login.html"), 3000);
+            } else {
+                document.getElementById('loader').style.display = 'none';
+                init();
+            }
+        });
+
+        async function init() {
+            await loadGlobalPrice();
+            await renderGlobalStats();
+            await loadUsers();
+        }
+
+        // --- FUNÇÕES DE PREÇO GLOBAL ---
+        async function loadGlobalPrice() {
+            try {
+                const doc = await db.collection("configuracoes").doc("financeiro").get();
+                if (doc.exists) {
+                    document.getElementById('valor-base').value = doc.data().valorPadrao || "35.00";
+                }
+            } catch (e) {
+                console.error("Erro ao carregar preço global", e);
+            }
+        }
+
+        async function saveGlobalPrice(val) {
+            const status = document.getElementById('price-status');
+            try {
+                await db.collection("configuracoes").doc("financeiro").set({
+                    valorPadrao: parseFloat(val),
+                    atualizadoEm: new Date().toISOString()
+                }, {
+                    merge: true
+                });
+                status.style.display = 'inline';
+                setTimeout(() => status.style.display = 'none', 2000);
+            } catch (e) {
+                alert("Erro ao salvar preço!");
+            }
+        }
+
+        async function renderGlobalStats() {
+            const allDevices = await db.collectionGroup("dispositivos").get();
+            let online = 0;
+            allDevices.forEach(doc => {
+                if (doc.data().status === 'online') online++;
+            });
+            document.getElementById('stat-terminals').innerText = allDevices.size;
+            document.getElementById('stat-online').innerText = online;
+        }
+
+        async function loadUsers() {
+            const usersSnap = await db.collection("usuarios").get();
+            const list = document.getElementById("userList");
+            list.innerHTML = "";
+            let lateCount = 0,
+                healthyCount = 0;
+            const today = new Date();
+
+            for (const doc of usersSnap.docs) {
+                const u = doc.data();
+                const id = doc.id;
+                const isMaster = id === MASTER_ID;
+
+                const devicesSnap = await db.collection("usuarios").doc(id).collection("dispositivos").get();
+                const usoAtual = devicesSnap.size;
+                const limite = u.limitedetelas || 0;
+                const atingiuLimite = usoAtual >= limite;
+                const precoPersonalizado = u.valorPorTela;
+
+                const venc = u.dataVencimento ? new Date(u.dataVencimento) : null;
+                let statusClass = "status-active",
+                    statusText = isMaster ? "Admin" : "Em Dia";
+
+                if (!isMaster && venc) {
+                    const diffDays = Math.ceil((today - venc) / (1000 * 60 * 60 * 24));
+                    if (diffDays > 0) {
+                        statusClass = "status-late";
+                        statusText = `Atrasado ${diffDays}d`;
+                        lateCount++;
+                    } else healthyCount++;
+                } else if (!isMaster) healthyCount++;
+
+                if (!isMaster && u.status === false) {
+                    statusClass = "status-blocked";
+                    statusText = "Bloqueado";
+                }
+
+                const row = document.createElement("tr");
+                row.className = "user-row";
+                row.onclick = (e) => {
+                    if (!e.target.closest('button') && !e.target.closest('input')) openSidePanel(id);
+                };
+
+                row.innerHTML = `
+                    <td><strong>${u.nome || 'Cliente'} ${isMaster ? '<i class="fas fa-crown" style="color:var(--warning)"></i>' : ''}</strong><br><small>${u.email}</small></td>
+                    <td>${isMaster ? '--' : `<input type="date" value="${u.dataVencimento || ''}" onchange="updateField('${id}', 'dataVencimento', this.value)" style="border:1px solid #ddd; padding:4px; border-radius:5px">`}</td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:8px">
+                            <span class="${atingiuLimite ? 'limit-alert' : ''}">${usoAtual} / ${limite}</span>
+                            <div class="price-tag-badge ${precoPersonalizado ? 'custom' : ''}">
+                                <i class="fas fa-ticket"></i> ${precoPersonalizado ? 'Personalizado' : 'Global'}
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        ${isMaster ? '' : `<button class="btn-circle btn-pay" onclick="confirmPayment('${id}', '${u.dataVencimento}', '${u.nome}', ${limite}, ${precoPersonalizado || document.getElementById('valor-base').value})"><i class="fas fa-check"></i></button>`}
+                        <button class="btn-circle btn-history" onclick="viewHistory('${id}', '${u.nome}')"><i class="fas fa-history"></i></button>
+                        <button class="btn-circle btn-view" onclick="viewTerminals('${id}', '${u.nome}')"><i class="fas fa-desktop"></i></button>
+                        <button class="btn-circle btn-key" onclick="resetPass('${u.email}')"><i class="fas fa-key"></i></button>
+                        ${isMaster ? '' : `<button class="btn-circle ${u.status === false ? 'btn-unban' : 'btn-ban'}" onclick="toggleUserStatus('${id}', ${u.status !== false})"><i class="fas ${u.status === false ? 'fa-unlock' : 'fa-user-slash'}"></i></button>`}
+                    </td>
+                `;
+                list.appendChild(row);
+            }
+            document.getElementById('stat-users').innerText = usersSnap.size - 1;
+            document.getElementById('stat-late').innerText = lateCount;
+            updateChart(healthyCount, lateCount);
+        }
+
+        async function openSidePanel(uid) {
+            const sideBody = document.getElementById('sideBody');
+            sideBody.innerHTML = '<div style="text-align:center; padding:50px"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>';
+            document.getElementById('sideOverlay').style.display = 'block';
+            document.getElementById('sidePanel').classList.add('open');
+
+            try {
+                const u = (await db.collection("usuarios").doc(uid).get()).data();
+                const cleanWhatsapp = (u.whatsapp || u.telefone || "").replace(/\D/g, "");
+                
+                const createdDate = u.createdAt ? (u.createdAt.toDate ? u.createdAt.toDate().toLocaleDateString('pt-BR') : new Date(u.createdAt).toLocaleDateString('pt-BR')) : 'Não informado';
+                const lastAccess = u.ultimoLogin ? (u.ultimoLogin.toDate ? u.ultimoLogin.toDate().toLocaleString('pt-BR') : new Date(u.ultimoLogin).toLocaleString('pt-BR')) : 'Não registrado';
+
+                sideBody.innerHTML = `
+                    <div class="info-group">
+                        <span class="info-label">📅 Membro desde</span>
+                        <span class="info-value">${createdDate}</span>
+                    </div>
+                    <div class="info-group">
+                        <span class="info-label">Nome Completo</span>
+                        <input type="text" id="edit-nome" class="side-input" value="${u.nome || ''}" placeholder="Nome do usuário">
+                    </div>
+                    <div class="info-group">
+                        <span class="info-label">Empresa / Negócio</span>
+                        <input type="text" id="edit-empresa" class="side-input" value="${u.empresa || ''}" placeholder="Nome da empresa">
+                    </div>
+                    <div class="info-group">
+                        <span class="info-label">E-mail</span>
+                        <span class="info-value">${u.email || 'Não informado'}</span>
+                    </div>
+                    <div class="info-group">
+                        <span class="info-label">Contato / WhatsApp</span>
+                        <input type="text" id="edit-zap" class="side-input" value="${u.whatsapp || u.telefone || ''}" placeholder="(00) 00000-0000">
+                        ${cleanWhatsapp ? `<a href="https://wa.me/${cleanWhatsapp}" target="_blank" class="btn-whatsapp"><i class="fab fa-whatsapp"></i> Chamar no WhatsApp</a>` : ''}
+                    </div>
+                    <div class="info-group">
+                        <span class="info-label">Cidade / UF</span>
+                        <input type="text" id="edit-cidade" class="side-input" value="${u.cidade || ''}" placeholder="Cidade - UF">
+                    </div>
+                    <div class="info-group">
+                        <span class="info-label">Último Acesso</span>
+                        <span class="info-value" style="color:var(--primary)"><i class="fas fa-clock"></i> ${lastAccess}</span>
+                    </div>
+                    <div class="info-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                        <div class="info-group">
+                            <span class="info-label">Limite de Telas</span>
+                            <input type="number" id="edit-telas" class="side-input" value="${u.limitedetelas || 0}">
+                        </div>
+                        <div class="info-group">
+                            <span class="info-label">Preço por Tela (R$)</span>
+                            <input type="number" id="edit-preco" class="side-input" value="${u.valorPorTela || ''}" placeholder="Padrão Global" step="0.01">
+                        </div>
+                    </div>
+                    <button class="btn-save-side" onclick="saveSideChanges('${uid}')"><i class="fas fa-save"></i> SALVAR ALTERAÇÕES</button>
+                `;
+            } catch (error) { sideBody.innerHTML = "Erro ao carregar detalhes."; }
+        }
+
+        async function saveSideChanges(uid) {
+            const btn = document.querySelector('.btn-save-side');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+
+            const data = {
+                empresa: document.getElementById('edit-empresa').value,
+                limitedetelas: parseInt(document.getElementById('edit-telas').value) || 0,
+                nome: document.getElementById('edit-nome').value,
+                whatsapp: document.getElementById('edit-zap').value,
+                cidade: document.getElementById('edit-cidade').value,
+                valorPorTela: document.getElementById('edit-preco').value ? parseFloat(document.getElementById('edit-preco').value) : firebase.firestore.FieldValue.delete()
+            };
+
+            try {
+                await db.collection("usuarios").doc(uid).update(data);
+                alert("Dados atualizados com sucesso!");
+                closeSidePanel();
+                loadUsers();
+            } catch (e) {
+                alert("Erro ao salvar.");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> SALVAR ALTERAÇÕES';
+            }
+        }
+
+        // --- VISUALIZAÇÃO DE TERMINAIS COM MÍDIAS (ARRAY) ---
+  // --- VISUALIZAÇÃO DE TERMINAIS COM LISTA DE MÍDIAS (ARRAY) ---
+        async function viewTerminals(uid, nome) {
+            showModal(`Terminais de ${nome}`, '<div style="text-align:center"><i class="fas fa-spinner fa-spin fa-2x"></i></div>');
+            
+            try {
+                const snap = await db.collection("usuarios").doc(uid).collection("dispositivos").get();
+                let html = '<div class="terminals-container">';
+                
+                if (snap.empty) {
+                    html = '<div style="text-align:center; width:100%; padding:40px; color:#64748b">Nenhum terminal vinculado a esta conta.</div>';
+                } else {
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        const statusClass = d.status === 'online' ? 'status-active' : '';
+                        const nomeAmigavel = d.nomeTela || `Terminal ${doc.id.substring(0,6)}`;
+                        const midias = d.midias || [];
+
+                        html += `
+                            <div class="terminal-card" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 25px; background: #f8fafc;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                                    <div>
+                                        <h3 style="margin:0; color:var(--primary);">${nomeAmigavel}</h3>
+                                        <small style="color:#64748b">ID: ${doc.id}</small>
+                                    </div>
+                                    <span class="badge ${statusClass}">${d.status || 'offline'}</span>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table style="width:100%; border-collapse: collapse; font-size: 13px; background: white; border-radius: 8px; overflow: hidden;">
+                                        <thead>
+                                            <tr style="background: #edf2f7; text-align: left;">
+                                                <th style="padding: 10px; border: 1px solid #e2e8f0;">Nome da Mídia</th>
+                                                <th style="padding: 10px; border: 1px solid #e2e8f0;">Tipo</th>
+                                                <th style="padding: 10px; border: 1px solid #e2e8f0;">URL / Link</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${midias.length > 0 ? midias.map(m => `
+                                                <tr>
+                                                    <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: 500;">${m.nome || 'Sem nome'}</td>
+                                                    <td style="padding: 10px; border: 1px solid #e2e8f0;">
+                                                        <span style="background:#e2e8f0; padding:2px 6px; border-radius:4px; font-size:11px;">
+                                                            ${m.tipo || (m.url && m.url.includes('.mp4') ? 'video' : 'imagem')}
+                                                        </span>
+                                                    </td>
+                                                    <td style="padding: 10px; border: 1px solid #e2e8f0;">
+                                                        <a href="${m.url || m}" target="_blank" style="color: #3182ce; text-decoration: none; display: flex; align-items: center; gap: 5px;">
+                                                            <i class="fas fa-external-link-alt" style="font-size: 10px;"></i> Abrir Mídia
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            `).join('') : `
+                                                <tr>
+                                                    <td colspan="3" style="padding: 20px; text-align: center; color: #94a3b8;">Nenhuma mídia cadastrada neste terminal.</td>
+                                                </tr>
+                                            `}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div style="margin-top: 15px; font-size: 11px; color: #64748b; display: flex; gap: 20px;">
+                                    <span><i class="fas fa-clock"></i> Visto em: ${d.ultimaVezVisto ? new Date(d.ultimaVezVisto).toLocaleString() : '---'}</span>
+                                    <span><i class="fas fa-microchip"></i> Versão: ${d.versao || '1.0.0'}</span>
+                                </div>
+                            </div>`;
+                    });
+                }
+                document.getElementById('modalBody').innerHTML = html + '</div>';
+            } catch (error) {
+                console.error(error);
+                document.getElementById('modalBody').innerHTML = '<div style="color:red; padding:20px;">Erro ao carregar dados dos terminais.</div>';
+            }
+        }
+
+        async function updateField(uid, field, value) { await db.collection("usuarios").doc(uid).update({ [field]: value }); }
+        
+        // --- PAGAMENTOS: Caminho /usuarios/UID/pagamentos ---
+        async function confirmPayment(uid, currentVenc, nome, qtdTelas, precoUnitario) {
+            if (!currentVenc) return alert("Defina uma data de vencimento primeiro.");
+            const valorCalculado = (qtdTelas * precoUnitario).toFixed(2);
+            const valorFinalInput = prompt(`Confirmar pagamento de ${nome}?\nValor sugerido: R$ ${valorCalculado}`, valorCalculado);
+            if (valorFinalInput === null) return;
+            
+            let nextDate = new Date(currentVenc);
+            nextDate.setMonth(nextDate.getMonth() + 1);
+            const dateStr = nextDate.toISOString().split('T')[0];
+            
+            const batch = db.batch();
+            const userRef = db.collection("usuarios").doc(uid);
+            
+            batch.update(userRef, { dataVencimento: dateStr, status: true });
+            
+            // Grava na subcoleção pagamentos do usuário
+            const pagRef = userRef.collection("pagamentos").doc();
+            batch.set(pagRef, { 
+                dataPagamento: new Date().toISOString(), 
+                valor: parseFloat(valorFinalInput), 
+                telasNaEpoca: qtdTelas 
+            });
+            
+            await batch.commit();
+            loadUsers();
+        }
+
+        async function viewHistory(uid, nome) {
+            showModal(`Histórico: ${nome}`, 'Carregando...');
+            // Busca na subcoleção pagamentos conforme sua rota
+            const snap = await db.collection("usuarios").doc(uid).collection("pagamentos").orderBy("dataPagamento", "desc").get();
+            let html = snap.empty ? 'Sem registros.' : '<ul style="list-style:none; padding:0">';
+            snap.forEach(doc => {
+                const p = doc.data();
+                html += `<li style="background:white; padding:15px; border-radius:10px; margin-bottom:10px; border-left:5px solid var(--success); display:flex; justify-content:space-between;">
+                    <strong>${new Date(p.dataPagamento).toLocaleDateString()}</strong><span>R$ ${p.valor.toFixed(2)}</span></li>`;
+            });
+            document.getElementById('modalBody').innerHTML = html + (snap.empty ? '' : '</ul>');
+        }
+
+        async function resetPass(email) { if(confirm(`Resetar senha de ${email}?`)) auth.sendPasswordResetEmail(email).then(() => alert("E-mail enviado!")); }
+        function toggleUserStatus(uid, currentlyActive) { if(confirm("Alterar status de acesso?")) db.collection("usuarios").doc(uid).update({ status: !currentlyActive }).then(loadUsers); }
+        
+        function updateChart(active, late) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if(window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Em Dia', 'Atrasados'], datasets: [{ data: [active, late], backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 0 }] }, options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } } });
+        }
+        
+        function showModal(title, body) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalBody').innerHTML = body; document.getElementById('mainModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('mainModal').style.display = 'none'; }
+        function closeSidePanel() { document.getElementById('sideOverlay').style.display = 'none'; document.getElementById('sidePanel').classList.remove('open'); }
+        function logout() { auth.signOut().then(() => window.location.href = "login.html"); }
+    </script>
+</body>
+
+</html>

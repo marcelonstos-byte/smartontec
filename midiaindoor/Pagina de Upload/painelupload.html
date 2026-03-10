@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Gerenciador Pro — ChamadorApp</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <style>
+         :root {
+            --bg: #f0f2f5;
+            --surface: #ffffff;
+            --primary: #1058a2;
+            --primary-dark: #0d4682;
+            --danger: #ff4d4f;
+            --success: #52c41a;
+            --radius: 16px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: #1f2937;
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        
+        .top-bar {
+            background: #fff;
+            padding: 10px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .brand-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            object-fit: contain;
+            background: #f9fafb;
+            border: 1px solid #eee;
+        }
+        
+        .account-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f3f4f6;
+            padding: 6px 14px;
+            border-radius: 100px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .account-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 0 5px;
+        }
+        
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 25px;
+            padding: 25px 40px;
+            flex: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        @media (max-width: 1100px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .glass-panel {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            height: fit-content;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #111827;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #4b5563;
+        }
+        
+        input[type="text"],
+        input[type="search"] {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            outline: none;
+        }
+        
+        input:focus {
+            border-color: #1058a2;
+            box-shadow: 0 0 0 3px rgba(16, 88, 162, 0.1);
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #1058a2;
+            color: white;
+        }
+        
+        .btn-ghost {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #d1d5db;
+            color: #374151;
+        }
+        
+        .btn-purple {
+            background: #6366f1;
+            color: white;
+        }
+        
+        .btn-orange {
+            background: #f97316;
+            color: white;
+        }
+        
+        .btn-danger-outline {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .media-grid {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .media-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #edf2f7;
+            cursor: grab;
+        }
+        
+        .thumb-box {
+            width: 90px;
+            height: 60px;
+            border-radius: 8px;
+            background: #000;
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
+            border: 1px solid #ddd;
+        }
+        
+        .thumb-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .thumb-box iframe {
+            width: 400px;
+            height: 300px;
+            border: none;
+            transform: scale(0.23);
+            transform-origin: 0 0;
+            pointer-events: none;
+        }
+        
+        .switch-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f9fafb;
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 15px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked+.slider {
+            background-color: var(--success);
+        }
+        
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+        
+        input[type="color"] {
+            height: 40px;
+            width: 100%;
+            cursor: pointer;
+            border: 1px solid #d1d5db;
+            padding: 2px;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 95%;
+            max-width: 500px;
+            padding: 30px;
+            border-radius: 20px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1f2937;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            display: none;
+            z-index: 200;
+            box-shadow: var(--shadow);
+        }
+        
+        .lib-card {
+            padding: 10px;
+            background: #fff;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.3s;
+        }
+        
+        .lib-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .lib-thumb {
+            width: 100%;
+            height: 100px;
+            background: #eee;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .lib-thumb iframe {
+            width: 1000px;
+            height: 800px;
+            border: none;
+            transform: scale(0.12);
+            transform-origin: 0 0;
+            pointer-events: none;
+        }
+        
+        .menu-opt-btn {
+            width: 100%;
+            padding: 20px;
+            margin-bottom: 10px;
+            text-align: left;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .menu-opt-btn:hover {
+            background: #f3f4f6;
+            border-color: var(--primary);
+        }
+        
+        .menu-opt-btn i {
+            font-size: 24px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="top-bar">
+        <div class="brand-area">
+            <button class="btn btn-outline" onclick="window.location.href='../central.html'">← Voltar</button>
+            <img id="nav-logo" src="" class="logo-preview" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4406/4406167.png'">
+            <h1 style="margin:0; font-size:1.1rem; color:#111827;">Painel de Controle</h1>
+        </div>
+        <div class="account-info">
+            <span class="account-name" id="userEmail">Usuário</span>
+            <button class="logout-btn" onclick="logout()">SAIR</button>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="glass-panel">
+            <div class="panel-header">
+                <h2>📂 Playlist de Mídias</h2>
+                <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                    <input id="searchInput" type="search" placeholder="Procurar..." oninput="listarMidias()" style="max-width:150px;">
+                    <button class="btn btn-orange" onclick="showMenuModal(true)">🏷️ Menu Digital</button>
+                    <button class="btn btn-purple" onclick="showLibrary(true)">🏛️ Biblioteca</button>
+                    <button class="btn btn-primary" onclick="showModal(true)">+ Manual</button>
+                </div>
+            </div>
+            <div id="list" class="media-grid"></div>
+            <div id="noMedia" style="text-align:center; padding:40px; color:#9ca3af; display:none;">A playlist está vazia.</div>
+        </section>
+
+        <aside style="display:flex; flex-direction:column; gap:25px;">
+            <section class="glass-panel" style="border-top: 4px solid #1058a2;">
+                <h2>🎨 Identidade & Rodapé</h2>
+                <div class="input-group">
+                    <label>URL do Logotipo</label>
+                    <input id="cfgLogo" type="text" placeholder="URL da imagem..." onblur="updatePreviewLogo()">
+                </div>
+
+                <div class="switch-group">
+                    <label style="font-size: 13px; font-weight: 600; color: #4b5563;">Ativar Rodapé</label>
+                    <label class="switch">
+            <input type="checkbox" id="cfgShowFooter" checked>
+            <span class="slider"></span>
+          </label>
+                </div>
+
+                <div class="switch-group">
+                    <label style="font-size: 13px; font-weight: 600; color: #4b5563;">Exibir Logo no Rodapé</label>
+                    <label class="switch">
+            <input type="checkbox" id="cfgShowLogoFooter" checked>
+            <span class="slider"></span>
+          </label>
+                </div>
+
+                <div class="color-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="input-group">
+                        <label>Fundo Rodapé</label>
+                        <input type="color" id="cfgColorFoot">
+                    </div>
+                    <div class="input-group">
+                        <label>Texto Rodapé</label>
+                        <input type="color" id="cfgColorFootText">
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="btnSalvarConfig" onclick="salvarConfiguracoes()" style="width:100%;">Aplicar Mudanças</button>
+                <button class="btn btn-danger-outline" onclick="restaurarCoresPadrao()" style="width:100%; border:none; font-size:12px;">Restaurar Padrões</button>
+            </section>
+
+            <section class="glass-panel">
+                <h2>📝 Frases do Rodapé</h2>
+                <div style="display:flex; gap:8px; margin-bottom:15px;">
+                    <input id="novaFrase" type="text" placeholder="Nova frase..." maxlength="120">
+                    <button class="btn btn-primary" onclick="adicionarFrase()">Add</button>
+                </div>
+                <div id="fraseList" style="max-height: 200px; overflow-y: auto; display:flex; flex-direction:column; gap:8px;"></div>
+            </section>
+        </aside>
+    </main>
+
+    <div id="backdrop" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="margin-top:0">➕ Adicionar Mídia</h2>
+            <div class="input-group">
+                <label>Nome</label>
+                <input id="nomeMidia" type="text" placeholder="Ex: Vídeo Institucional">
+            </div>
+            <div class="input-group">
+                <label>URL</label>
+                <input id="linkMidia" type="text" placeholder="Link da mídia..." oninput="detectaTipoInstantaneo()">
+                <div id="detectTypeBox" style="margin-top:5px;"></div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn btn-ghost" onclick="showModal(false)">Cancelar</button>
+                <button class="btn btn-primary" onclick="adicionarMidia()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalLibrary" class="modal-overlay">
+        <div class="modal-content" style="max-width: 800px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0">🏛️ Biblioteca de Entretenimento</h2>
+                <button class="btn btn-ghost" onclick="showLibrary(false)">✕</button>
+            </div>
+            <div class="library-grid" id="libGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:15px;"></div>
+        </div>
+    </div>
+
+    <div id="modalMenuDigital" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0">🏷️ Menu Digital</h2>
+                <button class="btn btn-ghost" onclick="showMenuModal(false)">✕</button>
+            </div>
+            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Escolha o modelo de exibição de produtos:</p>
+
+            <button class="menu-opt-btn" onclick="abrirSlideUnico()">
+          <span style="font-size: 24px;">🎯</span>
+          <div>
+              <div style="font-weight:600">Slide Produto Único</div>
+              <div style="font-size:12px; color:#666">Foca em um item por vez.</div>
+          </div>
+      </button>
+
+            <button class="menu-opt-btn" onclick="abrirSlideVariado()">
+          <span style="font-size: 24px;">📦</span>
+          <div>
+              <div style="font-weight:600">Slide Produtos Variados</div>
+              <div style="font-size:12px; color:#666">Exibe múltiplos itens em grade.</div>
+          </div>
+      </button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDiTbWSlcKpsPEtEzPkSU0jHZkfcAg5fNU",
+            authDomain: "newsmartonapp.firebaseapp.com",
+            projectId: "newsmartonapp",
+            databaseURL: "https://newsmartonapp-default-rtdb.firebaseio.com",
+            storageBucket: "newsmartonapp.firebasestorage.app"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        let playlistLocal = [];
+
+        const CORES_PADRAO = {
+            logoUrl: "./audio/logo.png",
+            corFooter: "#212529",
+            corFooterText: "#ffffff",
+            corNumero: "#ffcc00",
+            showFooter: true,
+            showLogoFooter: true
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const deviceId = urlParams.get('device');
+
+        function getDeviceRef() {
+            const user = auth.currentUser;
+            if (!user || !deviceId) return null;
+            return db.collection('usuarios').doc(user.uid).collection('dispositivos').doc(deviceId);
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                if (!deviceId) {
+                    alert("ID do dispositivo não encontrado na URL.");
+                    window.location.href = '../index.html';
+                    return;
+                }
+                document.body.style.display = 'flex';
+                document.getElementById('userEmail').textContent = user.email.split('@')[0];
+
+                const ref = getDeviceRef();
+                ref.onSnapshot(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        playlistLocal = data.midias || [];
+                        carregarInterfaceConfigs(data.config || {});
+                        listarMidias();
+                        renderizarFrases(data.fraseRodape || []);
+                    }
+                });
+
+                renderLibrary();
+            } else {
+                window.location.href = '../login.html';
+            }
+        });
+
+        function logout() {
+            auth.signOut();
+        }
+
+        function carregarInterfaceConfigs(data) {
+            const safeSet = (id, val, attr = 'value') => {
+                const el = document.getElementById(id);
+                if (el) el[attr] = val;
+            };
+
+            safeSet('cfgLogo', (data.logoUrl === CORES_PADRAO.logoUrl) ? '' : (data.logoUrl || ''));
+            safeSet('cfgColorFoot', data.corFooter || CORES_PADRAO.corFooter);
+            safeSet('cfgColorFootText', data.corFooterText || CORES_PADRAO.corFooterText);
+            safeSet('cfgShowFooter', data.showFooter !== undefined ? data.showFooter : true, 'checked');
+            safeSet('cfgShowLogoFooter', data.showLogoFooter !== undefined ? data.showLogoFooter : true, 'checked');
+
+            const navLogo = document.getElementById('nav-logo');
+            if (navLogo) navLogo.src = data.logoUrl || CORES_PADRAO.logoUrl;
+        }
+
+        async function salvarConfiguracoes() {
+            const ref = getDeviceRef();
+            const btn = document.getElementById('btnSalvarConfig');
+
+            const logoInput = document.getElementById('cfgLogo');
+            const showFooterInput = document.getElementById('cfgShowFooter');
+            const showLogoFooterInput = document.getElementById('cfgShowLogoFooter');
+            const colorFootInput = document.getElementById('cfgColorFoot');
+            const colorFootTextInput = document.getElementById('cfgColorFootText');
+
+            btn.disabled = true;
+            btn.innerText = "Salvando...";
+
+            try {
+                const novasConfigs = {
+                    logoUrl: logoInput.value.trim() || CORES_PADRAO.logoUrl,
+                    corFooter: colorFootInput.value,
+                    corFooterText: colorFootTextInput.value,
+                    corNumero: CORES_PADRAO.corNumero,
+                    showFooter: showFooterInput.checked,
+                    showLogoFooter: showLogoFooterInput.checked
+                };
+
+                await ref.set({
+                    config: novasConfigs
+                }, {
+                    merge: true
+                });
+                showToast('✅ Configurações Salvas!');
+                updatePreviewLogo();
+            } catch (err) {
+                console.error("Erro ao salvar:", err);
+                showToast('❌ Erro ao salvar');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Aplicar Mudanças";
+            }
+        }
+
+        async function restaurarCoresPadrao() {
+            if (confirm("Restaurar cores e logo padrão?")) {
+                await getDeviceRef().set({
+                    config: CORES_PADRAO
+                }, {
+                    merge: true
+                });
+                showToast('🔄 Padrão Restaurado');
+            }
+        }
+
+       function listarMidias() {
+    const container = document.getElementById('list');
+    const searchInput = document.getElementById('searchInput');
+    const search = searchInput ? searchInput.value.toLowerCase() : '';
+    container.innerHTML = '';
+
+    let visiveis = 0;
+    // Usamos playlistLocal para renderizar
+    playlistLocal.forEach((midia, index) => {
+        if (search && !midia.nome.toLowerCase().includes(search)) return;
+        visiveis++;
+
+        let thumbContent = '';
+        const url = midia.url ? midia.url.trim() : '';
+
+        if (midia.tipo === 'IMAGEM') {
+            thumbContent = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;">`;
+        } else if (midia.tipo === 'VIDEO') {
+            thumbContent = `<video src="${url}#t=0.1" preload="metadata" muted style="width:100%; height:100%; object-fit:cover; background:#000;"></video>`;
+        } else {
+            let finalUrl = url;
+            if (url.includes("docs.google.com/presentation")) {
+                finalUrl = url.replace(/\/pub\?/, "/embed?").replace(/\/edit(#.*)?$/, "/embed");
+            }
+
+            thumbContent = `
+            <div style="width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: white;">
+                <iframe src="${finalUrl}" 
+                        style="width: 300px; height: 200px; border: none; transform: scale(0.27); transform-origin: center; pointer-events: none;" 
+                        scrolling="no"></iframe>
+            </div>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'media-card';
+        // Adicionamos um cursor para indicar que é arrastável
+        card.style.cursor = 'move';
+        card.innerHTML = `
+            <div class="thumb-box" style="width: 80px; height: 50px; min-width: 80px; border-radius: 6px; overflow: hidden; background: #f3f4f6; border: 1px solid #ddd; position: relative; display: flex; align-items: center; justify-content: center;">
+                ${thumbContent}
+            </div>
+            <div style="flex: 1; margin-left: 12px; overflow: hidden;">
+                <div style="font-weight: 600; font-size: 13px; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${midia.nome}
+                </div>
+                <div style="font-size: 11px; color: #6b7280;">${midia.tipo} • ${midia.duracao || 12}s</div>
+            </div>
+            <div style="display: flex; gap: 4px;">
+                <button class="btn btn-ghost" onclick="editarDuracao(${index}, ${midia.duracao || 12})">🕒</button>
+                <button class="btn btn-ghost" onclick="excluirMidia(${index})" style="color: #ef4444;">🗑️</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    if (document.getElementById('noMedia')) {
+        document.getElementById('noMedia').style.display = visiveis === 0 ? 'block' : 'none';
+    }
+
+    // --- FUNCIONALIDADE DE ARRASTAR (SORTABLE) ---
+    if (typeof Sortable !== 'undefined' && visiveis > 1) {
+        new Sortable(container, {
+            animation: 150,
+            ghostClass: 'sortable-ghost', // opcional: adicione estilo no CSS para esta classe
+            onEnd: async function (evt) {
+                // Se a posição não mudou, ignora
+                if (evt.oldIndex === evt.newIndex) return;
+
+                // Move o item dentro do array local
+                const itemMovido = playlistLocal.splice(evt.oldIndex, 1)[0];
+                playlistLocal.splice(evt.newIndex, 0, itemMovido);
+
+                // Salva no Firebase
+                await salvarPlaylist();
+                
+                // Re-renderiza para atualizar os índices dos botões de editar/excluir
+                listarMidias();
+                
+                if (typeof showToast === 'function') showToast("🔄 Ordem atualizada");
+            }
+        });
+    }
+}
+
+        async function editarDuracao(index, atual) {
+            const nova = prompt("Tempo de exibição (segundos):", atual);
+            if (nova !== null && !isNaN(nova) && nova > 0) {
+                playlistLocal[index].duracao = parseInt(nova);
+                await salvarPlaylist();
+                showToast("⏱️ Tempo atualizado");
+            }
+        }
+
+        async function adicionarMidia() {
+            const nome = document.getElementById('nomeMidia').value || 'Nova Mídia';
+            const url = document.getElementById('linkMidia').value;
+            if (!url) return alert("URL obrigatória");
+
+            const novaMidia = {
+                nome,
+                url,
+                tipo: detectaTipoUrl(url),
+                duracao: 12,
+                ativo: true
+            };
+
+            playlistLocal.push(novaMidia);
+            await salvarPlaylist();
+
+            showModal(false);
+            document.getElementById('nomeMidia').value = '';
+            document.getElementById('linkMidia').value = '';
+            showToast("✅ Mídia adicionada");
+        }
+
+        async function addLib(n, u) {
+            playlistLocal.push({
+                nome: n,
+                url: u,
+                tipo: 'Entretenimento',
+                duracao: 15,
+                ativo: true
+            });
+            await salvarPlaylist();
+            showLibrary(false);
+            showToast("✅ App Adicionado");
+        }
+
+        async function excluirMidia(index) {
+            if (confirm("Excluir mídia?")) {
+                playlistLocal.splice(index, 1);
+                await salvarPlaylist();
+            }
+        }
+
+        async function salvarPlaylist() {
+            const ref = getDeviceRef();
+            if (!ref) return;
+            await ref.update({
+                midias: playlistLocal
+            });
+        }
+
+        async function adicionarFrase() {
+            const txt = document.getElementById('novaFrase').value.trim();
+            if (!txt) return;
+
+            const ref = getDeviceRef();
+            const doc = await ref.get();
+            const arr = doc.exists && doc.data().fraseRodape ? doc.data().fraseRodape : [];
+            arr.push(txt);
+
+            await ref.update({
+                fraseRodape: arr
+            });
+            document.getElementById('novaFrase').value = '';
+            showToast("✅ Frase adicionada");
+        }
+
+        function renderizarFrases(arr) {
+            const list = document.getElementById('fraseList');
+            list.innerHTML = '';
+            arr.forEach((f, i) => {
+                const item = document.createElement('div');
+                item.style = "background:#f9fafb; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px; border:1px solid #eee";
+                item.innerHTML = `<span>${f}</span><button onclick="removerFrase(${i})" style="border:none;background:none;color:red;cursor:pointer">✕</button>`;
+                list.appendChild(item);
+            });
+        }
+
+        async function removerFrase(index) {
+            const ref = getDeviceRef();
+            const doc = await ref.get();
+            const arr = doc.data().fraseRodape || [];
+            arr.splice(index, 1);
+            await ref.update({
+                fraseRodape: arr
+            });
+            showToast("🗑️ Frase removida");
+        }
+
+        function showModal(s) {
+            document.getElementById('backdrop').classList.toggle('show', s);
+        }
+
+        function showLibrary(s) {
+            document.getElementById('modalLibrary').classList.toggle('show', s);
+        }
+
+        function showMenuModal(s) {
+            document.getElementById('modalMenuDigital').classList.toggle('show', s);
+        }
+
+        function showToast(m) {
+            const t = document.getElementById('toast');
+            t.textContent = m;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        function detectaTipoUrl(url) {
+            const clean = url.split('?')[0].toLowerCase();
+            if (['.mp4', '.webm'].some(ext => clean.endsWith(ext))) return 'VIDEO';
+            if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].some(ext => clean.endsWith(ext))) return 'IMAGEM';
+            return 'HTML';
+        }
+
+        function detectaTipoInstantaneo() {
+            const val = document.getElementById('linkMidia').value;
+            const box = document.getElementById('detectTypeBox');
+            if (!val) {
+                box.innerHTML = '';
+                return;
+            }
+            box.innerHTML = `<span style="font-size:10px; color:#666">Tipo detectado: <b>${detectaTipoUrl(val)}</b></span>`;
+        }
+
+        function abrirSlideUnico() {
+            const params = new URLSearchParams(window.location.search);
+            // Tenta pegar 'device' ou 'id', o que estiver disponível
+            const deviceId = params.get("device") || params.get("id");
+
+            if (!deviceId) return alert("Erro: ID do dispositivo não encontrado na URL atual.");
+
+            // Redireciona sempre usando 'device' para manter o padrão
+            window.location.href = "../menudigitalonly.html?device=" + deviceId;
+        }
+
+        function abrirSlideVariado() {
+            const params = new URLSearchParams(window.location.search);
+            const deviceId = params.get("device") || params.get("id");
+
+            if (!deviceId) return alert("Erro: ID do dispositivo não encontrado.");
+
+            window.location.href = "../menudigitalpack.html?device=" + deviceId;
+        }
+
+    function renderLibrary() {
+        const grid = document.getElementById('libGrid');
+
+        // Organização dos dados por categoria
+        const categorias = [{
+            titulo: "🌤️ Utilidades e Clima",
+            apps: [
+                { nome: "📅 Neste Dia", url: "https://marcelonstos-byte.github.io/dinamics/NesteDia/index.html" },
+                { nome: "🌤️ Clima BTG", url: "https://marcelonascimento98.github.io/clm4btg/" },
+                { nome: "💵 Moedas V1", url: "https://marcelonstos-byte.github.io/dinamics/Conversor%20de%20Moedas/index.html" },
+                { nome: "💵 Moedas V2", url: "https://marcelonstos-byte.github.io/dinamics/Conversor%20de%20Moedas/index1.html" },
+                { nome: "⌚ Relógio Main", url: "https://marcelonstos-byte.github.io/r3l0gio/" }
+            ]
+        }, {
+            titulo: "📰 Conteúdo e News",
+            apps: [
+                { nome: "🎵 Top Hits", url: "https://marcelonstos-byte.github.io/dinamics/TopHits/index.html" },
+                { nome: "🎭 Novelas", url: "https://marcelonstos-byte.github.io/dinamics/news%20-%20Novelas/index.html" },
+                { nome: "📰 G1 News", url: "https://marcelonstos-byte.github.io/dinamics/news%20-%20g1/index.html" },
+                { nome: "🗞️ Gazeta", url: "https://marcelonstos-byte.github.io/dinamics/news%20-%20Gazeta/index.html" },
+                { nome: "🎬 AdoroCinema", url: "https://marcelonstos-byte.github.io/dinamics/AdoroCinema/index.html" },
+                { nome: "🎬 Prime Videos", url: "https://marcelonstos-byte.github.io/dinamics/PrimeVideos/index.html" },
+                { nome: "💻 TecMundo", url: "https://marcelonstos-byte.github.io/dinamics/TecMundo/index.html" }
+            ]
+        }, {
+            titulo: "🎰 Diversos e Jogos",
+            apps: [
+                { nome: "🎰 MegaSena V1", url: "https://marcelonstos-byte.github.io/dinamics/MegaSena/index.html" },
+                { nome: "🎰 MegaSena V2", url: "https://marcelonstos-byte.github.io/dinamics/MegaSena/index1.html" },
+                { nome: "✨ Horóscopo", url: "https://marcelonstos-byte.github.io/dinamics/horoscopohorizontal-main/index.html" },
+                { nome: "🤖 I.A. Portal", url: "https://marcelonstos-byte.github.io/dinamics/Intelig%C3%AAncia%20Artificial/AI.html" },
+                { nome: "✨ Uau!", url: "https://marcelonascimento98.github.io/videincrivel/" },
+                { nome: "😂 Engraçados", url: "https://marcelonstos-byte.github.io/dinamics/Engra%C3%A7ados/index.html" },
+                { nome: "📜 Frases", url: "https://marcelonascimento98.github.io/fr453s/" },
+                { nome: "📜 Nosso Brasil", url: "https://marcelonstos-byte.github.io/dinamics/NossoBrasil/index.html" }
+            ]
+        }, {
+            titulo: "🗺️ Monitoramento",
+            apps: [
+                { nome: "🗺️ Waze Map", url: "https://embed.waze.com/iframe?zoom=13&lat=-23.816993&lon=-46.103783&ct=livemap" }
+            ]
+        }];
+
+        // Lógica de Renderização (AGORA DENTRO DA FUNÇÃO)
+        grid.innerHTML = categorias.map(cat => `
+            <div style="grid-column: 1 / -1; margin-top: 20px; padding-bottom: 8px; border-bottom: 1px solid #eee; font-size: 13px; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">
+                ${cat.titulo}
+            </div>
+            ${cat.apps.map(app => `
+                <div class="lib-card" onclick="addLib('${app.nome}','${app.url}')" style="cursor: pointer;">
+                    <div class="lib-thumb">
+                        <iframe src="${app.url}" scrolling="no" style="pointer-events: none;"></iframe>
+                    </div>
+                    <div style="font-size:12px; font-weight:600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px;">
+                        ${app.nome}
+                    </div>
+                    <div style="font-size:10px; color:#1058a2; margin-top:4px;">+ Adicionar</div>
+                </div>
+            `).join('')}
+        `).join('');
+    }
+
+    // Chama a função para renderizar ao carregar a página
+    renderLibrary();
+</script>
+</body>
+
+</html>
