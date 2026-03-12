@@ -611,28 +611,24 @@
     <!-- =====================================================
          MODAL DEVICE ID  (padrão uidModal)
     ====================================================== -->
-    <div id="deviceModal" role="dialog" aria-modal="true" aria-labelledby="deviceModalTitle" aria-describedby="deviceModalDesc">
+    <div id="deviceModal" role="dialog" aria-modal="true" aria-labelledby="deviceModalTitle">
         <div class="box">
-
-            <!-- Ícone decorativo -->
             <div class="modal-icon" aria-hidden="true">📺</div>
 
-            <h2 id="deviceModalTitle">Identificação do Dispositivo</h2>
-            <p id="deviceModalDesc">
-                Informe o ID deste painel para vincular ao seu usuário e carregar as mídias e configurações.
-            </p>
+            <h2 id="deviceModalTitle">Vincular Dispositivo</h2>
+            <p id="deviceModalDesc">Insira os dados de acesso do seu painel.</p>
 
-            <input type="text" id="uidInput" placeholder="UID do Usuário" autocomplete="off" spellcheck="false" />
-            <input type="text" id="deviceIdInput" placeholder="ID do Dispositivo" autocomplete="off" spellcheck="false" />
+            <input type="text" id="accountNameInput" placeholder="Nome da Conta (Ex: Smart)" autocomplete="off" spellcheck="false" style="margin-bottom: 10px;" />
+
+            <input type="text" id="deviceIdInput" placeholder="ID do Painel (Ex: CvOB6...)" autocomplete="off" spellcheck="false" />
 
             <div id="deviceButtons">
-                <!-- Cancelar primeiro — padrão uidModal -->
                 <button class="btn ghost" id="btnCancelarModal">Cancelar</button>
-                <button class="btn primary" id="btnConfirmModal">Confirmar</button>
+                <button class="btn primary" id="btnConfirmModal">Confirmar Vinculação</button>
             </div>
 
             <p class="modal-hint">
-                Pressione <kbd>Enter</kbd> para confirmar
+                Preencha ambos os campos • <kbd>Enter</kbd> para confirmar
             </p>
         </div>
     </div>
@@ -667,12 +663,10 @@
         const rtdb = firebase.database();
 
         /* ---------- Globals ---------- */
-        let deviceId = null;
-        let devicePath = null;
-        let cidadeIndex = 0;
-        let _comandoRef = null;
-        let currentUid = null;
-
+        var currentUid = localStorage.getItem("painelUid") || null;
+        var deviceId = localStorage.getItem("painelDeviceId") || null;
+        var devicePath = localStorage.getItem("painelDevicePath") || null;
+        var cidadeTerminal = "Brasil";
         /* ===================================================
             ORIENTAÇÃO
          =================================================== */
@@ -952,7 +946,6 @@
                         wrapper.style.cssText = 'position:absolute;inset:0;';
                         wrapper.appendChild(el);
                         container.appendChild(wrapper);
-                        container.appendChild(wrapper);
 
                         // CHAMADA DA ESCALA:
                         // Usamos um pequeno timeout para garantir que o elemento já está no DOM
@@ -992,30 +985,35 @@
                 }
             }
 
-            // Inicia o ciclo
-            mostrarProximo();
-
-
             // --- (NOVIDADE: Agendador de Sincronismo Relógio Real) ---
             function agendarProximaSincronizacao() {
                 const agora = new Date();
                 const minutos = agora.getMinutes();
                 const segundos = agora.getSeconds();
 
-                // Se minutos < 30, o próximo alvo é 30:00. Se minutos >= 30, o alvo é 00:00 da próxima hora.
-                let minutosAteAlvo = minutos < 30 ? 30 - minutos : 60 - minutos;
+                // 1. Calcula quantos minutos faltam para a próxima dezena (10, 20, 30, 40, 50, 00)
+                // Se estamos em 14min, faltam 6 para os 20. Se estamos em 51, faltam 9 para os 60 (00).
+                let minutosAteAlvo = 10 - (minutos % 10);
 
-                // Converte tudo para milissegundos e subtrai os segundos atuais para precisão
+                // 2. Converte para milissegundos e subtrai os segundos atuais para cravar no 00s
                 const msParaSincronizar = (minutosAteAlvo * 60 * 1000) - (segundos * 1000);
 
-                console.log(`⏰ Sincronização agendada: O carrossel irá atualizar em ${minutosAteAlvo} minutos.`);
+                console.log(`⏰ Sincronização agendada: O carrossel irá atualizar em ${minutosAteAlvo} minutos (no próximo intervalo de 10min).`);
 
                 setTimeout(() => {
-                    console.warn("🎯 Hora cheia ou Meia hora detectada! Reiniciando carrossel para atualizar mídias...");
-                    iniciarCarrossel(colecao, containerId);
+                    console.warn("🎯 Intervalo de 10 minutos atingido! Atualizando mídias...");
+
+                    // Verifica se as variáveis globais necessárias existem antes de rodar
+                    if (typeof iniciarCarrossel === "function") {
+                        // Usa as variáveis que já devem estar no escopo global
+                        iniciarCarrossel('midias', 'superior');
+                    }
+
+                    // 3. Agenda a próxima automaticamente para manter o ciclo infinito
+                    agendarProximaSincronizacao();
+
                 }, msParaSincronizar);
             }
-
             // Inicializa a primeira rodada e agenda a próxima
             mostrarProximo();
             agendarProximaSincronizacao();
@@ -1072,52 +1070,102 @@
          =================================================== */
         function atualizarRelogio() {
             const agora = new Date();
-            document.getElementById("infoRodape").innerHTML =
-                `📅 ${agora.toLocaleDateString('pt-BR')} - 🕒 ${agora.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}`;
-        }
-
-        /* ===================================================
-            CLIMA
-         =================================================== */
-        const cidades = [{
-            nome: "São Paulo",
-            query: "Sao+Paulo"
-        }, {
-            nome: "Santos",
-            query: "Santos+SP"
-        }, {
-            nome: "Guarujá",
-            query: "Guaruja+SP"
-        }, {
-            nome: "Bertioga",
-            query: "Bertioga+SP"
-        }, {
-            nome: "São Sebastião",
-            query: "Sao+Sebastiao+SP"
-        }, {
-            nome: "Praia Grande",
-            query: "Praia+Grande+SP"
-        }, {
-            nome: "Mongaguá",
-            query: "Mongagua+SP"
-        }, {
-            nome: "Ilha Comprida",
-            query: "Ilha+Comprida+SP"
-        }];
-
-        async function atualizarTemperatura() {
-            const c = cidades[cidadeIndex];
-            try {
-                const r = await fetch(`https://wttr.in/${c.query}?format=%t`);
-                const t = await r.text();
-                if (t.toLowerCase().includes("unknown")) throw new Error();
-                document.getElementById("cidadeClima").innerText = `🌡️ ${c.nome}: ${t.replace('+','')}`;
-            } catch {
-                document.getElementById("cidadeClima").innerText = `⛅ ${c.nome}: Dados não disponíveis`;
+            const infoRodape = document.getElementById("infoRodape");
+            if (infoRodape) {
+                infoRodape.innerHTML = `📅 ${agora.toLocaleDateString('pt-BR')} - 🕒 ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
             }
-            cidadeIndex = (cidadeIndex + 1) % cidades.length;
         }
+        /* ---------- 1. Variáveis de Controle (Escopo Global) ---------- */
+        // Usamos var para evitar erros de redeclaração fatal detectados anteriormente
+        var currentUid = localStorage.getItem("painelUid") || null;
+        var deviceId = localStorage.getItem("painelDeviceId") || null;
+        var cidadeTerminal = "Brasil"; // Valor padrão
+        var listaRegional = []; // Lista de cidades da mesma região
+        var indexRegional = 0;
 
+        /* ---------- 2. Mapeamento de Microrregiões ---------- */
+        // Este objeto organiza as cidades por proximidade. 
+        // O sistema olha o que o user digitou e puxa o grupo correspondente.
+
+        const regioesBrasil = {
+            // --- SUDESTE ---
+            "Baixada Santista": ["Bertioga, SP", "Guarujá, SP", "Santos, SP", "São Vicente, SP", "Praia Grande, SP", "Mongaguá, SP"],
+            "Litoral Norte SP": ["São Sebastião, SP", "Ilhabela, SP", "Caraguatatuba, SP", "Ubatuba, SP"],
+            "Grande São Paulo": ["São Paulo, SP", "Guarulhos, SP", "Osasco, SP", "São Bernardo, SP", "Santo André, SP", "Barueri, SP"],
+            "Rio de Janeiro": ["Rio de Janeiro, RJ", "Niterói, RJ", "Duque de Caxias, RJ", "Nova Iguaçu, RJ", "São Gonçalo, RJ"],
+            "Grande Belo Horizonte": ["Belo Horizonte, MG", "Contagem, MG", "Betim, MG", "Nova Lima, MG", "Sabará, MG"],
+            "Grande Vitória": ["Vitória, ES", "Vila Velha, ES", "Serra, ES", "Cariacica, ES"],
+
+            // --- SUL ---
+            "Grande Curitiba": ["Curitiba, PR", "São José dos Pinhais, PR", "Pinhais, PR", "Araucária, PR", "Colombo, PR"],
+            "Grande Porto Alegre": ["Porto Alegre, RS", "Canoas, RS", "Novo Hamburgo, RS", "São Leopoldo, RS", "Gravataí, RS"],
+            "Grande Florianópolis": ["Florianópolis, SC", "São José, SC", "Palhoça, SC", "Biguaçu, SC"],
+
+            // --- NORDESTE ---
+            "Grande Salvador": ["Salvador, BA", "Lauro de Freitas, BA", "Camaçari, BA", "Simões Filho, BA"],
+            "Grande Recife": ["Recife, PE", "Olinda, PE", "Jaboatão dos Guararapes, PE", "Paulista, PE"],
+            "Grande Fortaleza": ["Fortaleza, CE", "Caucaia, CE", "Maracanaú, CE", "Eusébio, CE"],
+            "Grande Natal": ["Natal, RN", "Parnamirim, RN", "São Gonçalo do Amarante, RN", "Macaíba, RN"],
+
+            // --- CENTRO-OESTE ---
+            "Distrito Federal e Entorno": ["Brasília, DF", "Taguatinga, DF", "Ceilândia, DF", "Águas Lindas de Goiás, GO"],
+            "Grande Goiânia": ["Goiânia, GO", "Aparecida de Goiânia, GO", "Anápolis, GO", "Senador Canedo, GO"],
+
+            // --- NORTE ---
+            "Grande Manaus": ["Manaus, AM", "Iranduba, AM", "Manacapuru, AM", "Careiro, AM"],
+            "Grande Belém": ["Belém, PA", "Ananindeua, PA", "Marituba, PA", "Benevides, PA"]
+                // Você pode alimentar esta lista com as regiões de atuação do seu software.
+        };
+
+        /* ---------- 3. Função de Clima Baseada na Regionalidade ---------- */
+        async function atualizarTemperatura() {
+            try {
+                // 1. Busca a cidade atualizada no Firestore
+                if (currentUid && deviceId) {
+                    const doc = await db.collection("usuarios").doc(currentUid)
+                        .collection("dispositivos").doc(deviceId).get();
+
+                    if (doc.exists && doc.data().cidade) {
+                        cidadeTerminal = doc.data().cidade; // Ex: "Bertioga, SP"
+                    }
+                }
+
+                // 2. Lógica de Regionalidade:
+                // Encontra em qual grupo a cidade do terminal está inserida
+                let regiaoEncontrada = Object.keys(regioesBrasil).find(regiao =>
+                    regioesBrasil[regiao].includes(cidadeTerminal)
+                );
+
+                // Se a cidade estiver em uma região mapeada, usa a lista da região. 
+                // Caso contrário, mostra apenas a cidade do terminal.
+                listaRegional = regiaoEncontrada ? regioesBrasil[regiaoEncontrada] : [cidadeTerminal];
+
+                // 3. Seleciona a cidade do carrossel regional
+                const cidadeDaVez = listaRegional[indexRegional];
+                const queryParaApi = cidadeDaVez.replace(/,?\s+/g, '+');
+
+                // 4. Consulta a API (wttr.in)
+                const r = await fetch(`https://wttr.in/${queryParaApi}?format=%t`);
+                const t = await r.text();
+
+                // Validação para evitar que erros de rede quebrem o layout
+                if (t.toLowerCase().includes("unknown") || t.length > 10) throw new Error();
+
+                const elementoClima = document.getElementById("cidadeClima");
+                if (elementoClima) {
+                    elementoClima.innerText = `🌡️ ${cidadeDaVez}: ${t.replace('+', '')}`;
+                }
+
+                // 5. Rotaciona para a próxima cidade da região
+                indexRegional = (indexRegional + 1) % listaRegional.length;
+
+            } catch (err) {
+                console.error("⚠️ Erro no Clima Regional:", err);
+                // Em caso de erro, evita o ReferenceError que travava o script
+                const elementoClima = document.getElementById("cidadeClima");
+                if (elementoClima) elementoClima.innerText = `⛅ ${cidadeTerminal}`;
+            }
+        }
         /* ===================================================
             AUXILIARES URL / DEVICE
          =================================================== */
@@ -1157,27 +1205,6 @@
             return null;
         }
 
-        /* ===================================================
-            COMANDO REMOTO
-         =================================================== */
-        function escutarComandoRemoto() {
-
-            if (!currentUid || !deviceId) return;
-
-            if (_comandoRef) {
-                _comandoRef.off('value');
-                _comandoRef = null;
-            }
-
-            _comandoRef = rtdb.ref(`comandos/${currentUid}/${deviceId}`);
-
-            _comandoRef.on('value', snap => {
-                const cmd = snap.val();
-                if (cmd && cmd.acao === 'reload') {
-                    window.location.reload();
-                }
-            });
-        }
 
         /* ===================================================
             AUTH — único listener
@@ -1188,34 +1215,56 @@
             const savedPath = localStorage.getItem("painelDevicePath");
             const savedUid = localStorage.getItem("painelUid");
 
-            if (savedId && savedPath && savedUid) {
+            console.log("🔍 Verificando localStorage...", {
+                savedUid,
+                savedId
+            });
+
+            // ✅ SE EXISTIR VÍNCULO SALVO
+            if (savedUid && savedId && savedPath) {
+
                 try {
 
                     const doc = await db.doc(savedPath).get();
 
                     if (doc.exists) {
 
+                        console.log("✅ Dispositivo já vinculado.");
+
+                        currentUid = savedUid;
                         deviceId = savedId;
                         devicePath = savedPath;
-                        currentUid = savedUid;
+
+                        hideDeviceModal(true);
+
+                        startCarregamentofrases();
 
                         await carregarOrientacao(currentUid, deviceId);
 
-                        startLoadingOverlay();
                         iniciarCarrossel('midias', 'superior');
                         carregarfrases();
-                        escutarComandoRemoto();
-                        ativarWatcherDispositivo();
 
+                        if (typeof escutarComandoRemoto === "function") {
+                            escutarComandoRemoto();
+                        }
+
+                        if (typeof ativarWatcherDispositivo === "function") {
+                            ativarWatcherDispositivo();
+                        }
                         return;
+
                     }
 
-                } catch (e) {
-                    console.log("Erro ao validar dispositivo salvo.");
+                } catch (err) {
+
+                    console.warn("⚠️ Erro ao validar vínculo salvo:", err);
+
                 }
             }
 
-            // 🔥 Se não tiver salvo, mostra o modal
+            // ❌ NÃO EXISTE VÍNCULO
+            console.log("📢 Nenhum dispositivo vinculado.");
+
             showDeviceModal();
 
         });
@@ -1287,188 +1336,224 @@
     </script>
 
     <script>
-        /* ---------- Referências ---------- */
         const deviceModal = document.getElementById("deviceModal");
+        const accountNameInput = document.getElementById("accountNameInput");
         const deviceIdInput = document.getElementById("deviceIdInput");
-        const uidInput = document.getElementById("uidInput");
         const btnConfirmModal = document.getElementById("btnConfirmModal");
         const btnCancelarModal = document.getElementById("btnCancelarModal");
-
-        /* ---------- Abrir / Fechar com animação CSS ---------- */
-        function showDeviceModal() {
-            deviceModal.classList.add("show");
-            deviceIdInput.focus();
+        /**
+         * LOGICA CONDICIONAL IMEDIATA: 
+         * Se os dados existem, forçamos o modal a ficar invisível antes de qualquer animação.
+         */
+        if (currentUid && deviceId) {
+            if (deviceModal) {
+                deviceModal.style.setProperty("display", "none", "important");
+                deviceModal.classList.remove("show");
+            }
         }
 
-        function hideDeviceModal() {
-            deviceModal.classList.remove("show");
-        }
 
-        /* ---------- Overlay de carregamento ---------- */
-        function startLoadingOverlay() {
-            const overlay = document.getElementById('carregandoOverlay');
-            overlay.style.display = 'flex';
-            overlay.setAttribute('aria-hidden', 'false');
-            startCarregamentofrases();
-        }
 
-        /* ---------- Confirmar Device ID ---------- */
-        /* ---------- Confirmar Device ID ---------- */
-        btnConfirmModal.addEventListener('click', async() => {
+        /* ---------- 3. Lógica de Autenticação (Manual via Modal) ---------- */
+        async function iniciarPeloDeviceId() {
+            const nomeConta = accountNameInput.value.trim();
+            const idPainel = deviceIdInput.value.trim();
 
-            const uid = String(uidInput.value || '').trim();
-            const device = String(deviceIdInput.value || '').trim();
-
-            if (!uid || !device) {
-                alert("Informe o UID e o ID do dispositivo.");
+            if (!nomeConta || !idPainel) {
+                alert("Preencha todos os campos.");
                 return;
             }
 
             try {
-                const docRef = db
-                    .collection("usuarios")
-                    .doc(uid)
-                    .collection("dispositivos")
-                    .doc(device);
+                btnConfirmModal.disabled = true;
+                btnConfirmModal.innerText = "Conectando...";
 
-                const doc = await docRef.get();
+                const usersSnapshot = await db.collection("usuarios")
+                    .where("nome", "==", nomeConta)
+                    .get();
 
-                if (!doc.exists) {
-                    alert("Dispositivo não encontrado.");
+                if (usersSnapshot.empty) {
+                    alert(`Conta "${nomeConta}" não encontrada.`);
                     return;
                 }
 
-                // Extraímos os dados do documento
-                const data = doc.data() || {};
+                let vinculoSucesso = false;
 
-                // DEFINIÇÕES IMPORTANTES
-                currentUid = uid;
-                deviceId = device;
-                devicePath = docRef.path;
+                for (const userDoc of usersSnapshot.docs) {
+                    const uidCandidato = userDoc.id;
+                    const deviceRef = db.collection("usuarios").doc(uidCandidato)
+                        .collection("dispositivos").doc(idPainel);
 
-                // ✅ APLICAÇÃO IMEDIATA DOS ESTILOS (Rodapé, Cores, Logo)
-                if (data.config) {
-                    aplicarEstilos(data.config);
+                    const deviceSnap = await deviceRef.get();
+
+                    if (deviceSnap.exists) {
+                        currentUid = uidCandidato;
+                        deviceId = idPainel;
+                        devicePath = deviceRef.path;
+                        vinculoSucesso = true;
+                        break;
+                    }
                 }
 
-                console.log("Device validado e estilos aplicados:", devicePath);
+                if (vinculoSucesso) {
+                    // PERSISTÊNCIA NO STORAGE
+                    localStorage.setItem("painelDeviceId", deviceId);
+                    localStorage.setItem("painelDevicePath", devicePath);
+                    localStorage.setItem("painelUid", currentUid);
+                    localStorage.setItem("painelAccountName", nomeConta);
 
-                // Salva no navegador para acessos futuros
-                localStorage.setItem("painelDeviceId", deviceId);
-                localStorage.setItem("painelDevicePath", devicePath);
-                localStorage.setItem("painelUid", currentUid);
+                    console.log("✅ Dados salvos com sucesso.");
 
-                // Interface: Esconde modal e inicia o carregamento
-                hideDeviceModal();
-                startLoadingOverlay();
+                    hideDeviceModal(true);
+                    if (typeof startCarregamentofrases === "function") startCarregamentofrases();
+                    await inicializarModulosDoPlayer(currentUid, deviceId);
+                } else {
+                    alert("ID do Painel não reconhecido para esta conta.");
+                }
 
-                // Inicializa as funções do painel
-                await carregarOrientacao(currentUid, deviceId);
-                iniciarCarrossel('midias', 'superior');
-                carregarfrases();
-                escutarComandoRemoto();
-                ativarWatcherDispositivo();
-
-            } catch (err) {
-                console.error("Erro ao validar dispositivo:", err);
-                alert("Erro técnico ao validar dispositivo. Verifique o console.");
+            } catch (error) {
+                console.error("❌ Erro na conexão:", error);
+                alert("Erro técnico: " + error.message);
+            } finally {
+                btnConfirmModal.disabled = false;
+                btnConfirmModal.innerText = "Confirmar Vinculação";
             }
-        });
+        }
+
+        /* ---------- 4. Funções de Apoio e Boot ---------- */
+        async function inicializarModulosDoPlayer(uid, devId) {
+            try {
+                // Carregamento sequencial crítico (Orientação define o layout)
+                if (typeof carregarOrientacao === "function") {
+                    await carregarOrientacao(uid, devId);
+                }
+
+                // Carregamento paralelo de funções secundárias
+                if (typeof iniciarCarrossel === "function") iniciarCarrossel('midias', 'superior');
+                if (typeof carregarfrases === "function") carregarfrases();
+                if (typeof escutarComandoRemoto === "function") escutarComandoRemoto();
+
+            } catch (e) {
+                console.error("⚠️ Erro ao iniciar módulos do player:", e);
+            }
+        }
+
+        function showDeviceModal() {
+            if (deviceModal) {
+                deviceModal.style.display = "flex"; // Restaura o display para o flex do seu CSS
+                // O timeout garante que a transição de opacidade do seu CSS funcione
+                setTimeout(() => deviceModal.classList.add("show"), 10);
+                if (accountNameInput) accountNameInput.focus();
+            }
+        }
+
+        function hideDeviceModal(imediato = false) {
+            if (!deviceModal) return;
+
+            if (imediato) {
+                deviceModal.classList.remove("show");
+                deviceModal.style.setProperty("display", "none", "important");
+            } else {
+                deviceModal.classList.remove("show");
+                setTimeout(() => {
+                    deviceModal.style.setProperty("display", "none", "important");
+                }, 300);
+            }
+        }
 
         function resetDevice() {
+            if (!confirm("Deseja realmente desconectar este painel?")) return;
+
+            // Remove apenas os dados do painel
             localStorage.removeItem("painelDeviceId");
             localStorage.removeItem("painelDevicePath");
             localStorage.removeItem("painelUid");
-            location.reload();
+            localStorage.removeItem("painelAccountName");
+
+            // Zera variáveis globais
+            currentUid = null;
+            deviceId = null;
+            devicePath = null;
+
+            console.warn("🔌 Painel desconectado.");
+
+            // Limpa a tela
+            const superior = document.getElementById("superior");
+            if (superior) superior.innerHTML = "";
+
+            // Mostra novamente o modal de vinculação
+            showDeviceModal();
         }
 
-        /* ---------- Enter no input ---------- */
-        deviceIdInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter') btnConfirmModal.click();
+        /* ---------- 5. Eventos e Inicialização ---------- */
+        btnConfirmModal.addEventListener('click', iniciarPeloDeviceId);
+        if (btnCancelarModal) btnCancelarModal.addEventListener('click', () => hideDeviceModal());
+
+        [accountNameInput, deviceIdInput].forEach(input => {
+            if (input) {
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') iniciarPeloDeviceId();
+                });
+            }
         });
 
-        /* ---------- Cancelar ---------- */
-        btnCancelarModal.addEventListener('click', hideDeviceModal);
 
-        /* ---------- Animação de carregamento ---------- */
+        /* ---------- Animação de Carregamento ---------- */
         function startCarregamentofrases() {
             const frases = [{
                 txt: "Iniciando sistema",
-                time: 1800
+                time: 1500
             }, {
                 txt: "Estabelecendo Conexão Segura",
                 time: 1200
             }, {
                 txt: "Sincronizando com Database",
-                time: 500
+                time: 800
             }, {
                 txt: "Atualizando Mídias",
                 time: 1200
             }, {
                 txt: "Preparando interface",
-                time: 1500
+                time: 1000
             }];
 
             const frasesEl = document.getElementById("frases");
-            const pontosWrapper = document.getElementById("pontos");
-            const logo = document.getElementById("logoCarregando");
             const overlay = document.getElementById("carregandoOverlay");
             const dots = ['dot1', 'dot2', 'dot3'].map(id => document.getElementById(id));
 
-            const seq = ["", ".", "..", "...", "", ".", "..", "..."];
-            let pInt = null,
-                seqIdx = 0;
-
-            const startPontos = (spd = 400) => {
-                clearInterval(pInt);
-                pInt = setInterval(() => {
-                    const cur = seq[seqIdx];
-                    dots.forEach((d, i) => d.style.opacity = i < cur.length ? "1" : "0");
-                    seqIdx = (seqIdx + 1) % seq.length;
-                }, spd);
-            };
-            const stopPontos = () => {
-                clearInterval(pInt);
-                dots.forEach(d => d.style.opacity = "0");
-            };
+            if (!frasesEl || !overlay) return;
 
             let pi = 0;
+            const seq = ["", ".", "..", "..."];
+            let pInt = setInterval(() => {
+                const cur = seq[Math.floor(Date.now() / 400) % seq.length];
+                dots.forEach((d, i) => {
+                    if (d) d.style.opacity = i < cur.length ? "1" : "0";
+                });
+            }, 200);
 
             function showPhrase(i) {
+                if (i >= frases.length) {
+                    clearInterval(pInt);
+                    frasesEl.textContent = "Painel pronto 🚀";
+                    setTimeout(() => {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => overlay.remove(), 800);
+                    }, 800);
+                    return;
+                }
+
                 frasesEl.textContent = frases[i].txt;
-                startPontos(350);
                 setTimeout(() => {
                     frasesEl.classList.add('fadeOutShort');
-                    pontosWrapper.classList.add('fadeOutShort');
                     setTimeout(() => {
                         frasesEl.classList.remove('fadeOutShort');
-                        pontosWrapper.classList.remove('fadeOutShort');
-                        stopPontos();
-                        pi++;
-                        pi < frases.length ?
-                            setTimeout(() => showPhrase(pi), 200) :
-                            finishLoading();
+                        showPhrase(i + 1);
                     }, 400);
                 }, frases[i].time);
             }
-
-            function finishLoading() {
-                stopPontos();
-                frasesEl.textContent = "Painel pronto 🚀";
-                setTimeout(() => {
-                    logo.style.opacity = '0.12';
-                    overlay.style.opacity = '0';
-                    setTimeout(() => {
-                        try {
-                            overlay.remove();
-                        } catch {}
-                    }, 900);
-                }, 900);
-            }
-
-            setTimeout(() => showPhrase(0), 300);
+            showPhrase(0);
         }
-
         /* ===================================================
     ESTILOS E PERSONALIZAÇÃO (DINÂMICO)
 =================================================== */
