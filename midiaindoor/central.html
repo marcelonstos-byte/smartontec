@@ -394,25 +394,29 @@
     <div id="modalInfo" class="modal-overlay" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h3 style="margin:0; font-size:16px;">Detalhes da Conta</h3>
+                <h3 style="margin:0; font-size:16px;">Detalhes do Terminal</h3>
                 <button class="btn-back" onclick="toggleModal()" style="padding:4px">✕</button>
             </div>
 
             <div class="info-row">
-                <div class="info-label">User ID (UID)</div>
-                <div class="info-value" onclick="copyValue('uidVal')">
-                    <span id="uidVal">...</span> 📋
-                </div>
-            </div>
-
-            <div class="info-row">
                 <div class="info-label">Device ID (DID)</div>
-                <div class="info-value" onclick="copyValue('didVal')">
+                <div class="info-value" onclick="copyValue('didVal')" style="cursor:pointer;">
                     <span id="didVal">...</span> 📋
                 </div>
             </div>
 
-            <p style="font-size:11px; color:var(--muted); margin-top:20px;">Clique nos códigos para copiar.</p>
+            <div class="info-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                <div class="info-label">Localização (Cidade, UF)</div>
+                <input type="text" id="cityInput" placeholder="Ex: Vitória, ES" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px;">
+            </div>
+
+            <p style="font-size:11px; color:var(--muted); margin-top:20px;">
+                O DID é único para este dispositivo. A cidade define a previsão do tempo.
+            </p>
+
+            <button onclick="saveModalChanges()" style="width: 100%; margin-top: 10px; padding: 10px; background: var(--brand); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                Salvar Configurações
+            </button>
         </div>
     </div>
 
@@ -612,7 +616,6 @@
             if (diffHr > 0) return `${diffHr}h ${diffMin % 60}m`;
             return `${diffMin}min ${diffSec % 60}s`;
         }
-
         async function initAuth() {
             return new Promise((resolve) => {
                 auth.onAuthStateChanged(async user => {
@@ -625,21 +628,25 @@
                         return;
                     }
 
-                    document.getElementById('uidVal').textContent = user.uid;
+                    // --- AJUSTES AQUI ---
+                    // Removido: document.getElementById('uidVal').textContent = user.uid; (Não existe mais no HTML)
                     document.getElementById('didVal').textContent = painelIdAtivo;
                     document.getElementById('userLabel').textContent = user.email;
 
                     try {
                         const devRef = firestore.collection('usuarios').doc(user.uid).collection('dispositivos').doc(painelIdAtivo);
-                        devRef.onSnapshot(doc => {
+
+                        // Snapshot para monitorar mudanças (Logo, Nome e agora Cidade)
+                        devRef.onSnapshot(async doc => {
+                            const data = doc.data();
                             const imgEl = document.getElementById('logoImg');
                             const placeholder = document.getElementById('logoPlaceholder');
                             let logoUrlFinal = LOGO_PADRAO;
 
-                            if (doc.exists && doc.data().config && doc.data().config.logoUrl) {
-                                logoUrlFinal = doc.data().config.logoUrl;
-                            } else if (doc.exists && doc.data().logoUrl) {
-                                logoUrlFinal = doc.data().logoUrl;
+                            if (doc.exists && data.config && data.config.logoUrl) {
+                                logoUrlFinal = data.config.logoUrl;
+                            } else if (doc.exists && data.logoUrl) {
+                                logoUrlFinal = data.logoUrl;
                             }
 
                             imgEl.src = logoUrlFinal;
@@ -647,24 +654,86 @@
                                 imgEl.style.display = 'block';
                                 placeholder.style.display = 'none';
                             };
-                            imgEl.onerror = () => {
-                                if (!imgEl.src.includes(LOGO_PADRAO)) imgEl.src = LOGO_PADRAO;
-                            };
 
-                            const nome = doc.exists ? (doc.data().nomeTela || doc.data().nome || painelIdAtivo) : painelIdAtivo;
+                            const nome = doc.exists ? (data.nomeTela || data.nome || painelIdAtivo) : painelIdAtivo;
                             document.getElementById('empresaLabel').textContent = nome;
+
+                            // --- NOVA LÓGICA DE CIDADE ---
+                            const inputCidade = document.getElementById('cityInput');
+                            if (doc.exists && data.cidade) {
+                                // Se o dispositivo já tem cidade, usa ela
+                                inputCidade.value = data.cidade;
+                            } else {
+                                // Se não tem, busca a cidade padrão do perfil do usuário
+                                const userDoc = await firestore.collection('usuarios').doc(user.uid).get();
+                                if (userDoc.exists && userDoc.data().cidade) {
+                                    inputCidade.value = userDoc.data().cidade;
+                                }
+                            }
                         });
 
                     } catch (e) {
                         console.error("Erro:", e);
                         document.getElementById('empresaLabel').textContent = "Terminal Ativo";
                     }
+
                     resolve({
                         uid: user.uid,
                         deviceId: painelIdAtivo
                     });
                 });
             });
+        }
+        // 1. BUSCAR A CIDADE (Executar ao abrir o modal ou carregar a página)
+        async function carregarDadosCidade(uid, deviceId) {
+            try {
+                // Primeiro, tentamos buscar a cidade específica do dispositivo
+                const devSnap = await get(ref(db, `usuarios/${uid}/dispositivos/${deviceId}/cidade`));
+
+                if (devSnap.exists()) {
+                    document.getElementById('cityInput').value = devSnap.val();
+                } else {
+                    // Se o dispositivo não tem cidade definida, busca a cidade padrão do perfil (/usuarios/{UID}/cidade)
+                    const userSnap = await get(ref(db, `usuarios/${uid}/cidade`));
+                    if (userSnap.exists()) {
+                        document.getElementById('cityInput').value = userSnap.val();
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao carregar cidade:", error);
+            }
+        }
+
+        // 2. SALVAR A CIDADE (Apenas no caminho do dispositivo)
+        async function saveModalChanges() {
+            const cityInput = document.getElementById('cityInput');
+            const cityValue = cityInput.value.trim();
+            const deviceId = painelIdAtivo; // Usando a variável global que você já tem no código
+
+            if (!cityValue) {
+                alert("Por favor, insira uma cidade (Ex: Vitória, ES)");
+                return;
+            }
+
+            try {
+                // Pega o UID do usuário logado
+                const uid = auth.currentUser.uid;
+
+                // Referência exata: /usuarios/{UID}/dispositivos/{ID}
+                const devRef = firestore.collection('usuarios').doc(uid).collection('dispositivos').doc(deviceId);
+
+                // Salva apenas o campo cidade (sem apagar o resto)
+                await devRef.update({
+                    cidade: cityValue
+                });
+
+                alert("Localização atualizada com sucesso!");
+                toggleModal(); // Fecha o modal após salvar
+
+            } catch (error) {
+                console.error("Erro ao salvar:", error);
+                alert("Erro ao salvar: " + error.message);
+            }
         }
 
         function startMonitoring(data) {
