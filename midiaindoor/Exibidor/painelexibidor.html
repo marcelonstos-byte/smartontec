@@ -588,6 +588,69 @@
     </style>
 </head>
 
+<script>
+(function(){
+
+let escala = parseFloat(localStorage.getItem("painel_escala")) || 1;
+let fonte = parseFloat(localStorage.getItem("painel_fonte")) || 1;
+
+const wrapper = document.getElementById("wrapper");
+
+function aplicarEscala(){
+    if(!wrapper) return;
+
+    wrapper.style.transformOrigin = "center center";
+    wrapper.style.transform = `scale(${escala})`;
+
+    document.documentElement.style.fontSize = (fonte*100) + "%";
+
+    localStorage.setItem("painel_escala", escala);
+    localStorage.setItem("painel_fonte", fonte);
+}
+
+aplicarEscala();
+
+document.addEventListener("keydown",(e)=>{
+
+    const tag = (document.activeElement && document.activeElement.tagName) || "";
+    if(tag==="INPUT" || tag==="TEXTAREA") return;
+
+    // RESET
+    if(e.key==="0"){
+        escala=1;
+        fonte=1;
+        aplicarEscala();
+    }
+
+    // AUMENTAR TELA
+    if(!e.shiftKey && (e.key==="+" || e.key==="=")){
+        escala+=0.05;
+        aplicarEscala();
+    }
+
+    // DIMINUIR TELA
+    if(!e.shiftKey && e.key==="-" ){
+        escala=Math.max(0.5,escala-0.05);
+        aplicarEscala();
+    }
+
+    // AUMENTAR FONTE
+    if(e.shiftKey && (e.key==="+" || e.key==="=")){
+        fonte+=0.05;
+        aplicarEscala();
+    }
+
+    // DIMINUIR FONTE
+    if(e.shiftKey && e.key==="-" ){
+        fonte=Math.max(0.6,fonte-0.05);
+        aplicarEscala();
+    }
+
+});
+
+})();
+</script>
+
 <body>
 
     <!-- ===== Área principal ===== -->
@@ -930,60 +993,125 @@
                 return null;
             }
 
+            // --- FUNÇÃO DE VALIDAÇÃO DE AGENDA (ADICIONE ISSO) ---
+function validarAgenda(item) {
+    // Se não tem agenda (mídias antigas ou sem restrição), exibe sempre
+    if (!item.agenda) return true;
+
+    const agora = new Date();
+    const hoje = agora.toISOString().split('T')[0];
+    const diaSemana = agora.getDay(); // 0 (Dom) a 6 (Sáb)
+    const horaAtualMinutos = (agora.getHours() * 60) + agora.getMinutes();
+
+    const a = item.agenda;
+
+    // 1. Validar Intervalo de Datas
+    if (a.dataInicio && hoje < a.dataInicio) return false;
+    if (a.dataFim && hoje > a.dataFim) return false;
+
+    // 2. Validar Dias da Semana
+    if (a.dias && Array.isArray(a.dias) && a.dias.length > 0) {
+        if (!a.dias.includes(diaSemana)) return false;
+    }
+
+    // 3. Validar Horário
+    const [hI, mI] = (a.horaInicio || "00:00").split(':').map(Number);
+    const [hF, mF] = (a.horaFim || "23:59").split(':').map(Number);
+    
+    const minInicio = (hI * 60) + mI;
+    const minFim = (hF * 60) + mF;
+
+    if (horaAtualMinutos < minInicio || horaAtualMinutos > minFim) return false;
+
+    return true; // Passou em todos os filtros
+}
             // --- (Função Interna: Lógica de Exibição) ---
-            function mostrarProximo() {
-                limparTimer();
-                let tentativas = 0;
+function mostrarProximo() {
+        limparTimer();
+        let tentativas = 0;
 
-                while (tentativas < len) {
-                    const item = itens[idx];
-                    const el = criarElemento(item);
+        while (tentativas < len) {
+            const item = itens[idx];
+            const agora = new Date();
+            
+            // --- VALIDAÇÃO COM LOGS ---
+            if (validarAgenda(item)) {
+                const el = criarElemento(item);
 
-                    if (el) {
-                        container.innerHTML = '';
-                        const wrapper = document.createElement('div');
-                        wrapper.className = 'fade';
-                        wrapper.style.cssText = 'position:absolute;inset:0;';
-                        wrapper.appendChild(el);
-                        container.appendChild(wrapper);
+                if (el) {
+                    console.log(`%c▶ EXIBINDO: ${item.nome || 'Sem Nome'}`, "color: #10b981; font-weight: bold");
+                    
+                    container.innerHTML = '';
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'fade';
+                    wrapper.style.cssText = 'position:absolute;inset:0;';
+                    wrapper.appendChild(el);
+                    container.appendChild(wrapper);
 
-                        // CHAMADA DA ESCALA:
-                        // Usamos um pequeno timeout para garantir que o elemento já está no DOM
-                        setTimeout(aplicarEscalaMenu, 50);
+                    setTimeout(aplicarEscalaMenu, 50);
+                    if (typeof registrarExibicaoSafe === 'function') registrarExibicaoSafe(item, idx);
 
-                        if (typeof registrarExibicaoSafe === 'function') registrarExibicaoSafe(item, idx);
-                        // ... resto do código
+                    setTimeout(() => wrapper.classList.add('active'), 50);
 
-                        if (typeof registrarExibicaoSafe === 'function') registrarExibicaoSafe(item, idx);
+                    const avancar = () => {
+                        wrapper.classList.remove('active');
+                        setTimeout(() => {
+                            idx = (idx + 1) % len;
+                            mostrarProximo();
+                        }, 1000);
+                    };
 
-                        // Força o reflow para a animação fade funcionar
-                        setTimeout(() => wrapper.classList.add('active'), 50);
-
-                        const avancar = () => {
-                            wrapper.classList.remove('active');
-                            setTimeout(() => {
-                                idx = (idx + 1) % len;
-                                mostrarProximo();
-                            }, 1000); // Tempo do fade out
+                    if (el.tagName === 'VIDEO') {
+                        el.onended = avancar;
+                        el.onerror = (e) => {
+                            console.error(`❌ Erro no vídeo: ${item.nome}`, e);
+                            avancar();
                         };
-
-                        if (el.tagName === 'VIDEO') {
-                            el.onended = avancar;
-                            el.onerror = avancar;
-                            timerGlobalCarrossel = setTimeout(() => {
-                                if (el.paused || el.readyState < 2) avancar();
-                            }, 30000); // Segurança 30s para vídeos
-                        } else {
-                            const tempoUsuario = item.duracao ? Number(item.duracao) * 1000 : null;
-                            const delayFinal = tempoUsuario || TEMPO_PADRAO;
-                            timerGlobalCarrossel = setTimeout(avancar, delayFinal);
-                        }
-                        return;
+                        timerGlobalCarrossel = setTimeout(() => {
+                            if (el.paused || el.readyState < 2) {
+                                console.warn(`TIMEOUT: Vídeo ${item.nome} travou ou não carregou.`);
+                                avancar();
+                            }
+                        }, 60000);
+                    } else {
+                        const tempoUsuario = item.duracao ? Number(item.duracao) * 1000 : null;
+                        const delayFinal = tempoUsuario || TEMPO_PADRAO;
+                        timerGlobalCarrossel = setTimeout(avancar, delayFinal);
                     }
-                    tentativas++;
-                    idx = (idx + 1) % len;
+                    return;
                 }
+            } else {
+                // LOG DE PULO (Para saber por que não passou)
+                console.warn(`%c⏭️ PULADO (Agenda): ${item.nome || 'Mídia'}`, "color: #f59e0b", {
+                    horaAtual: agora.toLocaleTimeString(),
+                    diaSemana: agora.getDay(),
+                    config: item.agenda
+                });
             }
+
+            tentativas++;
+            idx = (idx + 1) % len;
+        }
+
+        // Se nada for válido na lista inteira
+        console.error("⛔ NENHUMA MÍDIA VÁLIDA PARA ESTE MOMENTO.");
+        container.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#94a3b8; font-family:sans-serif;">
+                <span style="font-size:48px; margin-bottom:10px;">🕒</span>
+                <p>Nenhuma mídia agendada para agora.</p>
+                <small>${new Date().toLocaleTimeString()}</small>
+            </div>
+        `;
+        
+        // Tenta reiniciar o ciclo em 30 segundos
+        timerGlobalCarrossel = setTimeout(() => {
+            idx = 0;
+            mostrarProximo();
+        }, 30000);
+    }
+
+    // Inicia o ciclo pela primeira vez
+    mostrarProximo();
 
             // --- (NOVIDADE: Agendador de Sincronismo Relógio Real) ---
             function agendarProximaSincronizacao() {
