@@ -409,6 +409,160 @@
         .menu-opt-btn i {
             font-size: 24px;
         }
+ /* --- ESTILIZAÇÃO MODERNA DO AGENDAMENTO --- */
+
+/* Ajuste no Overlay para o novo padrão */
+#modalSchedule.modal-overlay {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+}
+
+/* Card do Modal */
+#modalSchedule .modal-content {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    background: #ffffff;
+}
+
+#modalSchedule h2 {
+    font-size: 1.4rem;
+    color: var(--primary);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Container dos Dias (Visual de botões modernos) */
+.days-selector {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    background: var(--bg);
+    padding: 8px;
+    border-radius: 14px;
+    margin: 8px 0 24px 0;
+    border: 1px solid var(--border);
+}
+
+.day-label {
+    flex: 1;
+    height: 40px;
+    border: none !important; /* Remove bordas antigas */
+    background: #fff;
+    color: var(--muted);
+    border-radius: 10px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    font-weight: 700;
+}
+
+/* Estado Ativado do Dia (Premium Upgrade) */
+/* Esconde o checkbox original completamente */
+.day-checkbox {
+    display: none !important;
+}
+
+/* Base do botão do dia (o círculo/quadrado arredondado) */
+.day-label {
+    flex: 1;
+    height: 40px;
+    max-width: 40px; /* Mantém redondo se o espaço sobrar */
+    background: #f1f5f9; /* Cor de fundo quando desmarcado */
+    color: #64748b;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    user-select: none; /* Evita selecionar o texto ao clicar rápido */
+}
+
+/* Estado Ativado (Quando o usuário clica) */
+.day-checkbox:checked + .day-label {
+    background: var(--brand, #2563eb) !important;
+    color: white !important;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Hover (Passar o mouse) */
+.day-label:hover:not(.day-checkbox:checked + .day-label) {
+    background: #fff;
+    border-color: var(--brand);
+    color: var(--brand);
+    transform: translateY(-1px);
+}
+
+/* Feedback de clique */
+.day-label:active {
+    transform: scale(0.95);
+}
+
+/* Melhoria nos Inputs de Data e Hora */
+.input-group label {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+#modalSchedule input[type="date"], 
+#modalSchedule input[type="time"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--primary);
+    transition: all 0.2s;
+}
+
+#modalSchedule input:focus {
+    outline: none;
+    border-color: var(--brand);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--brand-light);
+}
+
+/* Botão de Salvar em Destaque */
+.btn-save-schedule {
+    background: var(--brand);
+    color: white;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    font-size: 15px;
+    transition: all 0.2s;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-save-schedule:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
     </style>
 </head>
 
@@ -543,6 +697,59 @@
           </div>
       </button>
         </div>
+</div> 
+
+<div id="modalSchedule" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+        <h2 style="margin-top:0">📅 Agendar Exibição</h2>
+        <input type="hidden" id="editScheduleIndex">
+
+        <label style="font-size: 14px; font-weight: 600;">Dias da Semana</label>
+        <div class="days-selector">
+            <input type="checkbox" id="dom" class="day-checkbox"><label for="dom" class="day-label">D</label>
+            <input type="checkbox" id="seg" class="day-checkbox"><label for="seg" class="day-label">S</label>
+            <input type="checkbox" id="ter" class="day-checkbox"><label for="ter" class="day-label">T</label>
+            <input type="checkbox" id="qua" class="day-checkbox"><label for="qua" class="day-label">Q</label>
+            <input type="checkbox" id="qui" class="day-checkbox"><label for="qui" class="day-label">Q</label>
+            <input type="checkbox" id="sex" class="day-checkbox"><label for="sex" class="day-label">S</label>
+            <input type="checkbox" id="sab" class="day-checkbox"><label for="sab" class="day-label">S</label>
+        </div>
+
+        <div class="grid-2-col">
+            <div class="input-group">
+                <label>Data Início</label>
+                <input type="date" id="dateStart">
+            </div>
+            <div class="input-group">
+                <label>Data Fim</label>
+                <input type="date" id="dateEnd">
+            </div>
+        </div>
+
+        <div class="grid-2-col">
+            <div class="input-group">
+                <label>Hora Início</label>
+                <input type="time" id="timeStart">
+            </div>
+            <div class="input-group">
+                <label>Hora Fim</label>
+                <input type="time" id="timeEnd">
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top: 20px;">
+            <button class="btn btn-ghost" onclick="showScheduleModal(false)">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarAgendamento()">Salvar Agenda</button>
+        </div>
+    </div>
+</div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top: 20px;">
+            <button class="btn btn-ghost" onclick="showScheduleModal(false)">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarAgendamento()">Salvar Agenda</button>
+        </div>
+    </div>
+</div>
     </div>
 
     <div id="toast" class="toast"></div>
@@ -723,10 +930,11 @@
                 </div>
                 <div style="font-size: 11px; color: #6b7280;">${midia.tipo} • ${midia.duracao || 12}s</div>
             </div>
-            <div style="display: flex; gap: 4px;">
-                <button class="btn btn-ghost" onclick="editarDuracao(${index}, ${midia.duracao || 12})">🕒</button>
-                <button class="btn btn-ghost" onclick="excluirMidia(${index})" style="color: #ef4444;">🗑️</button>
-            </div>
+<div style="display: flex; gap: 4px;">
+    <button class="btn btn-ghost" onclick="abrirAgendamento(${index})" title="Agendar">📅</button>
+    <button class="btn btn-ghost" onclick="editarDuracao(${index}, ${midia.duracao || 12})">🕒</button>
+    <button class="btn btn-ghost" onclick="excluirMidia(${index})" style="color: #ef4444;">🗑️</button>
+</div>
         `;
         container.appendChild(card);
     });
@@ -759,6 +967,83 @@
         });
     }
 }
+function showScheduleModal(show) {
+    const modal = document.getElementById('modalSchedule');
+    if (show) {
+        modal.classList.add('show');
+    } else {
+        modal.classList.remove('show');
+    }
+}
+
+function abrirAgendamento(index) {
+    console.log("Tentando abrir agendamento para o índice:", index);
+    const midia = playlistLocal[index];
+    if (!midia) {
+        console.error("Mídia não encontrada no índice:", index);
+        return;
+    }
+
+    document.getElementById('editScheduleIndex').value = index;
+    
+    // Fallback para agenda vazia
+    const agenda = midia.agenda || { 
+        dias: [], 
+        dataInicio: '', 
+        dataFim: '', 
+        horaInicio: '00:00', 
+        horaFim: '23:59' 
+    };
+    
+    // Reset e preenchimento dos dias
+    const diasIds = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+    diasIds.forEach((id, idx) => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = (agenda.dias && agenda.dias.includes(idx));
+    });
+
+    // Preencher inputs
+    document.getElementById('dateStart').value = agenda.dataInicio || '';
+    document.getElementById('dateEnd').value = agenda.dataFim || '';
+    document.getElementById('timeStart').value = agenda.horaInicio || '00:00';
+    document.getElementById('timeEnd').value = agenda.horaFim || '23:59';
+
+    showScheduleModal(true);
+}
+
+async function salvarAgendamento() {
+    const index = document.getElementById('editScheduleIndex').value;
+    const diasIds = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+    
+    const diasSelecionados = [];
+    diasIds.forEach((id, idx) => {
+        if (document.getElementById(id).checked) {
+            diasSelecionados.push(idx);
+        }
+    });
+
+    const agenda = {
+        dias: diasSelecionados,
+        dataInicio: document.getElementById('dateStart').value,
+        dataFim: document.getElementById('dateEnd').value,
+        horaInicio: document.getElementById('timeStart').value,
+        horaFim: document.getElementById('timeEnd').value
+    };
+
+    // Atualiza o objeto local
+    if (!playlistLocal[index]) return;
+    playlistLocal[index].agenda = agenda;
+
+    try {
+        // Certifique-se de que a função salvarPlaylist() existe no seu código principal
+        await salvarPlaylist(); 
+        showScheduleModal(false);
+        showToast("📅 Agendamento salvo com sucesso!");
+    } catch (err) {
+        console.error(err);
+        showToast("❌ Erro ao salvar agendamento");
+    }
+}
 
         async function editarDuracao(index, atual) {
             const nova = prompt("Tempo de exibição (segundos):", atual);
@@ -768,41 +1053,57 @@
                 showToast("⏱️ Tempo atualizado");
             }
         }
+        
+        // Gera a agenda padrão "Sempre Exibida"
+function gerarAgendaInfinita() {
+    return {
+        dataInicio: new Date().toISOString().split('T')[0], // Hoje
+        dataFim: "2099-12-31",                             // Prazo infinito
+        horaInicio: "00:00",
+        horaFim: "23:59",
+        dias: [0, 1, 2, 3, 4, 5, 6],                       // Todos os dias (Dom a Sáb)
+        ativa: true
+    };
+}
 
-        async function adicionarMidia() {
-            const nome = document.getElementById('nomeMidia').value || 'Nova Mídia';
-            const url = document.getElementById('linkMidia').value;
-            if (!url) return alert("URL obrigatória");
+ async function adicionarMidia() {
+    const nome = document.getElementById('nomeMidia').value || 'Nova Mídia';
+    const url = document.getElementById('linkMidia').value;
+    
+    if (!url) return alert("URL obrigatória");
 
-            const novaMidia = {
-                nome,
-                url,
-                tipo: detectaTipoUrl(url),
-                duracao: 12,
-                ativo: true
-            };
+    const novaMidia = {
+        nome,
+        url,
+        tipo: detectaTipoUrl(url),
+        duracao: 12,
+        ativo: true,
+        agenda: gerarAgendaInfinita() // Adicionado aqui
+    };
 
-            playlistLocal.push(novaMidia);
-            await salvarPlaylist();
+    playlistLocal.push(novaMidia);
+    await salvarPlaylist();
 
-            showModal(false);
-            document.getElementById('nomeMidia').value = '';
-            document.getElementById('linkMidia').value = '';
-            showToast("✅ Mídia adicionada");
-        }
+    showModal(false);
+    document.getElementById('nomeMidia').value = '';
+    document.getElementById('linkMidia').value = '';
+    showToast("✅ Mídia adicionada");
+}
 
-        async function addLib(n, u) {
-            playlistLocal.push({
-                nome: n,
-                url: u,
-                tipo: 'Entretenimento',
-                duracao: 15,
-                ativo: true
-            });
-            await salvarPlaylist();
-            showLibrary(false);
-            showToast("✅ App Adicionado");
-        }
+async function addLib(n, u) {
+    playlistLocal.push({
+        nome: n,
+        url: u,
+        tipo: 'Entretenimento',
+        duracao: 15,
+        ativo: true,
+        agenda: gerarAgendaInfinita() // Adicionado aqui também
+    });
+
+    await salvarPlaylist();
+    showLibrary(false);
+    showToast("✅ App Adicionado");
+}
 
         async function excluirMidia(index) {
             if (confirm("Excluir mídia?")) {
@@ -810,6 +1111,15 @@
                 await salvarPlaylist();
             }
         }
+
+function showScheduleModal(show) {
+    const modal = document.getElementById('modalSchedule');
+    if (show) {
+        modal.classList.add('show');
+    } else {
+        modal.classList.remove('show');
+    }
+}
 
         async function salvarPlaylist() {
             const ref = getDeviceRef();
@@ -922,7 +1232,7 @@
             titulo: "🌤️ Utilidades e Clima",
             apps: [
                 { nome: "📅 Neste Dia", url: "https://marcelonstos-byte.github.io/pgdinsm/NesteDia/index.html" },
-                { nome: "🌤️ Clima BTG", url: "https://marcelonstos-byte.github.io/pgdinsm/Clima%20-%20BTG/" },
+                { nome: "🌤️ Clima BTG", url: "https://marcelonascimento98.github.io/clm4btg/" },
                 { nome: "💵 Moedas V1", url: "https://marcelonstos-byte.github.io/pgdinsm/Conversor%20de%20Moedas/index.html" },
                 { nome: "💵 Moedas V2", url: "https://marcelonstos-byte.github.io/pgdinsm/Conversor%20de%20Moedas/index1.html" },
                 { nome: "⌚ Relógio Main", url: "https://marcelonstos-byte.github.io/r3l0gio/" }
@@ -983,4 +1293,3 @@
 
 
 </html>
-
