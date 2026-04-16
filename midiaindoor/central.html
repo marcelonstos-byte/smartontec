@@ -743,7 +743,7 @@
                 document.getElementById("statusConexao").innerText = isOnline ? "Sistema Ativo" : "Desconectado";
             });
 
-            const LIMITE_INATIVIDADE = 2 * 60 * 1000;
+            const LIMITE_INATIVIDADE = 3 * 60 * 1000;
 
             database.ref(`exibicoes/${data.uid}/${data.deviceId}`).on('value', snap => {
                 const logsRaw = snap.val();
